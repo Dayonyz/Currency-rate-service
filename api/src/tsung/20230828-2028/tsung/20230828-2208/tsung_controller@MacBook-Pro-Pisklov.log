@@ -1,0 +1,24 @@
+
+=INFO REPORT==== 28-Aug-2023::22:08:46 ===
+    ts_config_server:(5:<0.139.0>) Config server started, logdir is "/Users/pisklovdenis/projects/currency-rate/api/src/tsung/20230828-2028/tsung/20230828-2208"
+ 
+=INFO REPORT==== 28-Aug-2023::22:08:46 ===
+              ts_mon:(5:<0.122.0>) starting monitor, global 
+
+=INFO REPORT==== 28-Aug-2023::22:08:46 ===
+           ts_config:(5:<0.139.0>) Reading config file: stress-test.xml
+
+=ERROR REPORT==== 28-Aug-2023::22:08:46 ===
+3485- fatal: {error,{error_missing_element_declaration_in_DTD,tsung}}
+
+=INFO REPORT==== 28-Aug-2023::22:08:46 ===
+    ts_config_server:(0:<0.139.0>) Error while parsing XML config file: {fatal,
+                                                                         {{error,
+                                                                           {error_missing_element_declaration_in_DTD,
+                                                                            tsung}},
+                                                                          {file,
+                                                                           "stress-test.xml"},
+                                                                          {line,
+                                                                           1},
+                                                                          {col,
+                                                                           23}}}

@@ -1,0 +1,76 @@
+version: "3.7"
+
+services:
+    php:
+        tty: true
+        platform: linux/x86_64
+        container_name: php-fpm
+        build:
+            context: .docker/php
+            args:
+                - XDEBUG_INSTALL=1
+                - USER_DOCKER_ID=${DOCKER_USER_ID}
+                - GROUP_DOCKER_ID=${DOCKER_GROUP_ID}
+                - PROJECT_PATH=${DOCKER_CODE_FOLDER}
+        user: "${DOCKER_USER_ID}:${DOCKER_GROUP_ID}"
+        volumes:
+            - ./src:${DOCKER_CODE_FOLDER}:delegated
+        environment:
+            XDEBUG_CONFIG: 'remote_host=${DOCKER_REMOTE_HOST} remote_enable=1'
+            PHP_IDE_CONFIG: 'serverName=${DOCKER_SERVER_NAME}'
+        ports:
+            - "${DOCKER_XDEBUG_PORT}:9000"
+        networks:
+            - backend
+    nginx:
+        tty: true
+        image: nginx:latest
+        container_name: nginx-server
+        ports:
+            - "${DOCKER_NGINX_PORT}:80"
+            - "${DOCKER_NGINX_SSL_PORT}:443"
+        volumes:
+            - ./.docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+            - ./.docker/nginx/nginx.conf:/etc/nginx/nginx.conf
+            - ./.docker/nginx/ssl:/etc/nginx/ssl
+            - ./src:${DOCKER_CODE_FOLDER}:delegated
+        depends_on:
+            - php
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
+        networks:
+            - backend
+
+    mysql:
+        tty: true
+        image: mysql:8.0
+        container_name: db
+        ports:
+            - "${DOCKER_MYSQL_PORT}:3306"
+        user: "${DOCKER_USER_ID}:${DOCKER_GROUP_ID}"
+        volumes:
+            -  ./.docker/mysql/my.cnf:/etc/mysql/mysql.conf.d/mysqld.cnf
+            - ./.docker/mysql/volumes:/var/lib/mysql:delegated
+        command: --default-authentication-plugin=mysql_native_password
+        environment:
+            MYSQL_DATABASE: currency
+            MYSQL_USER: dev
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_PASSWORD: root
+        networks:
+            - backend
+
+    redis:
+        tty: true
+        image: redis:alpine
+        container_name: redis-server
+        ports:
+            - "${DOCKER_REDIS_PORT}:6379"
+        volumes:
+            - ./.docker/redis/data:/data
+        networks:
+            - backend
+networks:
+    backend:
+        name: backend
+        driver: bridge

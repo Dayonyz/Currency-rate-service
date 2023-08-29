@@ -1,0 +1,11 @@
+version: '3.7'
+
+services:
+    app:
+        build: .
+        container_name: vue_app_container
+        ports:
+            - '8081:8080'
+        volumes:
+            - .:/app
+        command: 'npm run serve'
