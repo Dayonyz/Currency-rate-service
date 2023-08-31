@@ -1,14 +1,14 @@
 <template>
   <div class="auth">
     <h1>Please, auth to continue:</h1>
-    <div class="field"><label for="email">Email</label><input v-model="email" id="email" type="text" name="email"></div>
-    <div class="field"><label for="password">Password</label><input v-model="password" id="password" type="text" name="password"></div>
-    <div class="field"><input type="button" @click="login({ email: email, password: password})" value="Submit"></div>
+    <div class="field"><label for="email">Email</label><input v-model="email" id="email" type="text" name="email"><br></div>
+    <div class="field"><label for="password">Password</label><input v-model="password" id="password" type="password" name="password"></div>
+    <div class="field"><input type="button" @click="auth({ email: email, password: password})" value=" Login "></div>
   </div>
 </template>
 
 <script>
-import { mapActions } from 'vuex'
+import { mapActions, mapGetters } from 'vuex'
 export default {
   name: 'AuthView',
   data () {
@@ -17,10 +17,22 @@ export default {
       password: ''
     }
   },
+  computed: {
+    ...mapGetters('auth', [
+      'token'
+    ])
+  },
+
   methods: {
-    ...mapActions({
-      login: 'auth/login'
-    })
+    ...mapActions('auth', [
+      'login'
+    ]),
+
+    auth(credentials) {
+      if (this.login(credentials)) {
+        this.$router.push({ name: 'dashboard', params: { token: this.token }});
+      }
+    }
   }
 }
 </script>
@@ -31,7 +43,8 @@ input {
   border-style: solid;
   border-width: 1px;
 }
-.field{
+.field {
+  padding-bottom: 5px;
   width: 300px;
   margin: 0 auto;
   clear:both;

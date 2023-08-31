@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Contracts;
 
+use App\Dto\PaginationTotals;
 use App\Dto\PairRateDto;
 use App\Enums\CurrencyEnum;
 
@@ -15,5 +16,5 @@ interface CurrencyRatesRepository
     
     public function getPairRatesByIso(CurrencyEnum $currency, CurrencyEnum $base, ?int $perPage = null, int $page = 1);
 
-    public function getPairRatesPagesCount(CurrencyEnum $currency, CurrencyEnum $base, ?int $perPage = null): int;
+    public function getPairRatesPaginationTotals(CurrencyEnum $currency, CurrencyEnum $base, ?int $perPage = null): PaginationTotals;
 }

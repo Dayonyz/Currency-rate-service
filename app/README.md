@@ -1,24 +1,31 @@
-# app
+# Frontend Deploy
 
-## Project setup
 ```
-npm install
+cd app
+cp .env.example .env
 ```
 
-### Compiles and hot-reloads for development
+## Build docker container
 ```
+make build
+```
+
+### Start docker container
+```
+make start
+```
+
+### Stop docker container
+```
+make stop
+```
+
+### Start development and fixes
+```
+make ssh
 npm run serve
 ```
 
-### Compiles and minifies for production
-```
-npm run build
-```
+### Available host
+See [http://127.0.0.1:8081](http://127.0.0.1:8081)
 
-### Lints and fixes files
-```
-npm run lint
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).

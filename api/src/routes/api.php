@@ -16,10 +16,10 @@ use App\Http\Controllers\CurrencyRatesController;
 */
 
 Route::post('login', [AuthController::class, 'login']);
-Route::post('logout', [AuthController::class, 'logout']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('currency/rates/{currency}/{base}/{perPage?}/{page?}', [CurrencyRatesController::class, 'index']);
     Route::get('currency/rate/{currency}/{base}', [CurrencyRatesController::class, 'latest']);
+    Route::post('logout', [AuthController::class, 'logout']);
 });
 

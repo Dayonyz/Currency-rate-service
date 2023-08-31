@@ -1,21 +1,17 @@
-import api from '@/boot/api'
+import { apiClient } from '@/boot/api'
 import endpoints from "@/routes/endpoints";
 import { makeDefaultGetters } from '@/utilities/store'
 
 const defaultState = () => ({
-  token: '',
+  token: null,
 })
 
 const state = defaultState()
 
 const actions = {
-  async login({ commit}, payload = {}) {
+  async login({ commit }, payload) {
     try {
-      const { token } = api.apiClient.post(endpoints.login, payload)
-
-      if (!token) {
-        return
-      }
+      const { token } = await apiClient.post(endpoints.login, payload)
 
       commit('SET_TOKEN', token)
 
@@ -28,11 +24,11 @@ const actions = {
 
   async logout({ commit }) {
     try {
-      await api.post(endpoints.logout)
+      const { success } = await apiClient.post(endpoints.logout)
 
       commit('UNSET_TOKEN')
 
-      return true
+      return success
     } catch (error) {
       console.error('API error (logout): ', error)
       return false
@@ -44,10 +40,12 @@ const actions = {
 const mutations = {
   SET_TOKEN (state, token) {
     state.token = token
+    localStorage.setItem('auth_token', token)
   },
 
   UNSET_TOKEN (state) {
-    state.token = ''
+    state.token = null
+    localStorage.removeItem('auth_token')
   },
 }
 
@@ -57,6 +55,7 @@ const defaultGetters = makeDefaultGetters(properties)
 
 const getters = {
   ...defaultGetters,
+  isAuth: (state) => { return !!state.token }
 }
 
 export default {

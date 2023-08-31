@@ -1,11 +1,12 @@
 import axios from 'axios'
 
-const apiClient = axios.create({
+export const apiClient = axios.create({
   baseURL: process.env.VUE_APP_API_ROOT_URL,
   withCredentials: false,
   headers: {
-    Accept: 'application/json',
+    'Accept': 'application/json',
     'Content-Type': 'application/json',
+    mode: 'cors'
   },
   timeout: 60 * 1000,
 })
@@ -14,10 +15,10 @@ apiClient.interceptors.request.use(
   (config) => {
     const token =
       typeof window !== 'undefined'
-        ? localStorage.getItem('auth._token.local')
+        ? localStorage.getItem('auth_token')
         : null
     if (token) {
-      config.headers.Authorization = token
+      config.headers.Authorization = 'Bearer ' + token
     }
     return config
   },
@@ -27,29 +28,19 @@ apiClient.interceptors.request.use(
 )
 
 apiClient.interceptors.response.use(
-  function (response) {
+  response => {
+    if (response.data) {
+      return response.data
+    }
+
     return response
   },
-  function (error) {
-    if (error.constructor.name === 'Cancel') {
-      return
+  error => {
+    if (!error.response) {
+      console.log("Please check your internet connection.");
     }
 
-    const errors = (((error || {}).response || {}).data || {}).errors || null
-
-    if (errors) {
-      return Promise.reject(errors)
-    }
-
-    let message = (((error || {}).response || {}).data || {}).message || error
-    const seeCode =
-      (((error || {}).response || {}).data || {}).see_code || false
-    const code = (((error || {}).response || {}).data || {}).status_code || 400
-
-    if (seeCode) {
-      message = { message, code }
-    }
-    return Promise.reject(message)
+    return Promise.reject(error)
   }
 )
 

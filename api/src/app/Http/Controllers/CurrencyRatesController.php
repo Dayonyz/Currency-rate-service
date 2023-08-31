@@ -23,12 +23,15 @@ class CurrencyRatesController extends Controller
         $currency = EnumHelper::caseByName(CurrencyEnum::cases(), $currency, "Invalid currency: $currency");
         $base = EnumHelper::caseByName(CurrencyEnum::cases(), $base, "Invalid currency: $base");
         $rates = $this->currencyRateRepository->getPairRatesByIso($currency, $base, $perPage, $page);
-        $pagesCount = $this->currencyRateRepository->getPairRatesPagesCount($currency, $base, $perPage);
+        $totals = $this->currencyRateRepository->getPairRatesPaginationTotals($currency, $base, $perPage);
 
         return response()->json([
             'success' => true,
-            'data' => PairRateResource::collection($rates),
-            'pages' => $pagesCount
+            'data' => [
+                'rates' => PairRateResource::collection($rates),
+                'pagesCount' => $totals->getPagesCount(),
+                'itemsCount' => $totals->getTotal()
+            ],
         ], Response::HTTP_OK);
     }
 

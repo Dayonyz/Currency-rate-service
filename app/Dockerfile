@@ -1,22 +1,26 @@
-FROM node:16-alpine3.12
+FROM node:lts-alpine
 
-# устанавливаем простой HTTP-сервер для статики
 RUN npm install -g http-server
+RUN apk update && apk add rsync
 
-# делаем каталог 'app' текущим рабочим каталогом
-WORKDIR /app
+WORKDIR /usr/local/tmp
 
-# копируем оба 'package.json' и 'package-lock.json' (если есть)
 COPY package*.json ./
 
-RUN npm install
-RUN npm install -g @vue/cli
+RUN npm install && npm cache clean --force \
+    && npm install -g @vue/cli
 
-# копируем файлы и каталоги проекта в текущий рабочий каталог (т.е. в каталог 'app')
+#    && cp -r node_modules /node_modules
+#ENV PATH=/usr/local/node_modules/.bin:$PATH
+WORKDIR /usr/local/app
+RUN cp -r /usr/local/tmp/node_modules /usr/local/app/node_modules
+RUN cp /usr/local/tmp/package*.json /usr/local/app
+#RUN rsync -avu --delete "/node_modules/" "/app/node_modules"
+
 COPY . .
 
-# собираем приложение для production с минификацией
-#RUN npm run build
+RUN npm run build
 
 EXPOSE 8080
 CMD [ "http-server", "dist" ]
+CMD ["npm", "run", "serve"]

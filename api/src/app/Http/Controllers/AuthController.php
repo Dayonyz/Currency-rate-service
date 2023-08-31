@@ -31,6 +31,17 @@ class AuthController extends Controller
 
     public function logout(Request $request): JsonResponse
     {
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'errors' => [
+                    'Permission denied',
+                ]
+            ], Response::HTTP_FORBIDDEN);
+        }
+
         $request->user()->currentAccessToken()->delete();
 
         return response()->json([], Response::HTTP_OK);

@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Dto\PaginationTotals;
 use App\Dto\PairRateDto;
 use App\Enums\CurrencyEnum;
 use App\Exceptions\RepositoryNotFoundException;
@@ -97,12 +98,16 @@ class CurrencyRatesEloquentRepository implements CurrencyRatesRepository
             $closure();
     }
 
-    public function getPairRatesPagesCount(CurrencyEnum $currency, CurrencyEnum $base, ?int $perPage = null): int
+    public function getPairRatesPaginationTotals(CurrencyEnum $currency, CurrencyEnum $base, ?int $perPage = null): PaginationTotals
     {
         $this->assertIsNullOrGreater($perPage, 0, 'Page size must be at least 1');
 
         $closure = function () use ($currency, $base, $perPage) {
-            return $perPage ? ceil(Rate::byPairIso($currency ,$base)->count() / $perPage) : 1;
+            $count  = Rate::byPairIso($currency ,$base)->count();
+            return new PaginationTotals(
+                $perPage ? ceil(Rate::byPairIso($currency ,$base)->count() / $perPage) : 1,
+                $count
+            );
         };
 
         return $this->cacheable ?
@@ -122,7 +127,7 @@ class CurrencyRatesEloquentRepository implements CurrencyRatesRepository
             throw new \InvalidArgumentException($error);
     }
 
-    private function rememberOrRetrieve(callable $closure, string $key, array $tags): Rate|Collection|int|null
+    private function rememberOrRetrieve(callable $closure, string $key, array $tags): Rate|Collection|PaginationTotals|null
     {
         $data = Cache::get($key);
 

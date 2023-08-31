@@ -1,21 +1,34 @@
 <template>
   <div id="app">
     <nav>
-      <router-link v-if="!token" to="/auth">Auth</router-link>
-      <router-link v-if="token" to="/">Home</router-link>
+      <router-link to="/">Home</router-link><span>&nbsp;</span>
+      <router-link v-if="!isAuth" to="/auth">Auth</router-link><span v-if="!isAuth">&nbsp;</span>
+      <router-link v-if="isAuth" to="/dashboard">Dashboard</router-link><span>&nbsp;</span>
+      <a @click.prevent="exit" href="#" v-if="isAuth">Logout</a>
     </nav>
     <router-view/>
   </div>
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
+import { mapGetters, mapActions } from 'vuex'
 export default {
   name: 'App',
   computed: {
     ...mapGetters('auth', [
-      'token'
+      'isAuth',
     ])
+  },
+  methods: {
+    ...mapActions('auth', [
+      'logout'
+    ]),
+
+    exit() {
+      if (this.logout()) {
+        this.$router.push({ name: 'home'})
+      }
+    }
   }
 }
 </script>

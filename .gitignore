@@ -1,2 +1,5 @@
 .idea
-
+api/.docker/mysql/volumes/*
+api/.docker/redis/data/*
+app/.DS_Store
+api/.DS_Store

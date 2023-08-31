@@ -1,11 +1,20 @@
-version: '3.7'
-
+version: "3.9"
 services:
-    app:
-        build: .
+    frontend:
         container_name: vue_app_container
-        ports:
-            - '8081:8080'
+        build:
+            context: .
         volumes:
-            - .:/app
-        command: 'npm run serve'
+            - ./:/usr/local/app/
+#            - ./src/:/usr/local/app/src/
+#            - ./.env:/usr/local/app/src/.env
+#            - ./package.json:/usr/local/app/package.json
+            - exclude:/usr/local/app/node_modules/
+        expose: [8080]
+        ports:
+            - "8081:8080"
+#        command: bash -c "rm -rf /usr/local/app/node_modules/*"
+#        command: sh -c "cp -a /node_modules/. /app/node_modules"
+#        command: sh -c "rsync -avu --delete "/node_modules/" "/usr/local/app/node_modules""
+volumes:
+    exclude:
