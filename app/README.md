@@ -6,6 +6,7 @@
 cd app
 make generate-env
 make build
+make init
 ```
 
 ### Start docker container
