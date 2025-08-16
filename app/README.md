@@ -1,4 +1,7 @@
 # Frontend Deploy - Build docker container
+
+## Deploy API before!!! See in api/Readme.md
+
 ```
 cd app
 make generate-env
