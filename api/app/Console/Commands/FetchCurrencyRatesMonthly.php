@@ -82,8 +82,6 @@ class FetchCurrencyRatesMonthly extends Command
             }
             try {
                 while ($since <= $now) {
-                    Log::info('since: ' . $since->format('Y-m-d'));
-                    Log::info('now: ' . $now->format('Y-m-d'));
                     $rate = $this->ratesService->getCurrencyRateByDate(
                         CurrenciesEnum::fromName($this->option('currency')),
                         CurrenciesEnum::fromName($this->option('base')),
