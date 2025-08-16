@@ -22,6 +22,9 @@ yarn-error.log
 /.vscode
 /.zed
 
+!storage/app/public/currencyRates/
+!storage/app/public/currencyRates/**
+
 .DS_Store
 api/.docker/.DS_Store
 api/.docker/mysql/.DS_Store

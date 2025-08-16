@@ -61,8 +61,8 @@ class FetchCurrencyRatesMonthly extends Command
             "{$this->option('M')}-{$this->option('Y')}.json";
 
 
-        if (Storage::disk('local')->exists($filePath)) {
-            $collection = unserialize(Storage::disk('local')->get($filePath));
+        if (Storage::disk('public')->exists($filePath)) {
+            $collection = unserialize(Storage::disk('public')->get($filePath));
         }
 
         $isCurrentMonth = $now->format('Y-m') === "{$this->option('Y')}-{$this->option('M')}";
@@ -135,7 +135,7 @@ class FetchCurrencyRatesMonthly extends Command
     private function saveToFile(CurrencyRateDtoCollection $collection, string $path): void
     {
         if ($collection->getPairRates()->isNotEmpty()) {
-            Storage::disk('local')->put($path, $collection->getSerialized());
+            Storage::disk('public')->put($path, $collection->getSerialized());
         }
     }
 }
