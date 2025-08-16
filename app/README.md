@@ -10,6 +10,12 @@ make build
 make start
 ```
 
+## Test User credentials
+```
+test0@example.com
+password
+```
+
 ### Stop docker container
 ```
 make stop
