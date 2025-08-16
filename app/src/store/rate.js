@@ -7,7 +7,7 @@ const defaultState = () => ({
   currentRate: null,
   rates: [],
   page: 1,
-  pageSize: 10,
+  pageSize: 20,
   pagesCount: 1,
   itemsCount: null
 })

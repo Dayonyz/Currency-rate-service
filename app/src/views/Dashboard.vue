@@ -8,24 +8,35 @@
     </h3>
     <vuetable
       v-if="currentRate"
-      :fields="['currency.iso_code', 'base_currency.iso_code', 'rate', 'actual_at']"
+      :fields="fields"
       :api-mode="false"
       :data="rates"
     />
     <div style="padding-top:10px">
       <div class="field">
         <label for="page"> Page </label>
-        <select name="page" @change.prevent="selectPage($event)">
-          <option v-for="page in pagesCount" :key="page" :value="page">{{ page }}</option>
+        <select
+          name="page"
+          @change.prevent="selectPage($event)"
+          :value="page"
+        >
+          <option
+            v-for="pageN in pagesCount"
+            :key="pageN"
+            :value="pageN"
+          >{{ pageN }}</option>
         </select>
         <label for="per-page"> Per Page </label>
-        <select name="per-page" @change.prevent="selectPageSize($event)">
+        <select
+          name="per-page"
+          @change.prevent="selectPageSize($event)"
+          :value="pageSize"
+        >
           <option
-            v-for="value in perPageItems"
-            :key="value"
-            :value="value"
-            :selected="value === pageSize"
-          >{{ value }}</option>
+            v-for="perPageValue in perPageItems"
+            :key="perPageValue"
+            :value="perPageValue"
+          >{{ perPageValue }}</option>
         </select>
         <label for="total"> Total </label>
         <input disabled name="total" :value="itemsCount"/>
@@ -45,14 +56,29 @@ export default {
     Vuetable,
   },
   data () {
-    return {
-      perPageItems: [
-        5,
-        10,
-        20,
-        30
-      ]
-    }
+      return {
+          perPageItems: [20, 30, 50, 100],
+          fields: [
+              {
+                  name: 'currency.iso_code',
+                  title: 'Currency'
+              },
+              {
+                  name: 'base_currency.iso_code',
+                  title: 'Base currency'
+              },
+              {
+                  name: 'rate',
+                  title: 'Rate',
+                  titleClass: 'text-center',
+                  dataClass: 'text-right'
+              },
+              {
+                  name: 'actual_at',
+                  title: 'Actual at'
+              }
+          ]
+      }
   },
   mounted() {
     this.fetchOnLoad()

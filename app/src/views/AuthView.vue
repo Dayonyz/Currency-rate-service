@@ -28,11 +28,12 @@ export default {
       'login'
     ]),
 
-    auth(credentials) {
-      if (this.login(credentials)) {
-        this.$router.push({ name: 'dashboard', params: { token: this.token }});
-      }
+    async auth(credentials) {
+    const success = await this.login(credentials)
+    if (success) {
+        await this.$router.push({name: 'dashboard'})
     }
+}
   }
 }
 </script>

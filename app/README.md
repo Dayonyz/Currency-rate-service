@@ -1,12 +1,7 @@
-# Frontend Deploy
-
+# Frontend Deploy - Build docker container
 ```
 cd app
-cp .env.example .env
-```
-
-## Build docker container
-```
+make generate-env
 make build
 ```
 
@@ -25,7 +20,4 @@ make stop
 make ssh
 npm run serve
 ```
-
-### Available host
-See [http://127.0.0.1:8081](http://127.0.0.1:8081)
 

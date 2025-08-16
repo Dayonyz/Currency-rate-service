@@ -13,20 +13,18 @@ const router = new VueRouter({
 })
 
 router.beforeEach((to, from, next) => {
+  const isAuth = !!store.state.auth.token
 
-  if (!from.name && to.meta.requiresAuth && !store.state.auth.token) {
-    next({ name: 'auth' })
-    return
+  if (to.meta.requiresAuth && !isAuth) {
+    return next({ name: 'auth' })
   }
 
-  if (!from.name && to.name === 'auth' && store.state.auth.token) {
-    next({ name: 'dashboard' })
-    return
-  }
+  if (to.name === 'auth' && isAuth) {
+    if (to.fullPath === from.fullPath) {
+      return next(false)
+    }
 
-  if (from.name && to.name && to.requiresAuth && to.params.token) {
-    next()
-    return
+    return next({ name: 'dashboard' })
   }
 
   next()

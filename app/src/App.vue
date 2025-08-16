@@ -24,11 +24,12 @@ export default {
       'logout'
     ]),
 
-    exit() {
-      if (this.logout()) {
-        this.$router.push({ name: 'home'})
+      async exit() {
+          await this.logout()
+          if (this.$route.name !== 'home') {
+              this.$router.push({ name: 'home' })
+          }
       }
-    }
   }
 }
 </script>

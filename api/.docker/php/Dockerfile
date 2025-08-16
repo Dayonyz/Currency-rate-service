@@ -1,97 +1,74 @@
-FROM php:8.1-fpm
+FROM php:8.2-fpm
 
-ARG XDEBUG_INSTALL
+ARG PROJECT_PATH
 ARG USER_DOCKER_ID
 ARG GROUP_DOCKER_ID
-ARG PROJECT_PATH
 
-# Redis
-RUN pecl install redis
-RUN echo "extension=redis.so" >> /usr/local/etc/php/conf.d/docker-php-redis.ini
-
-RUN apt-get update -y && apt-get upgrade -y && apt-get install -y \
-    apt-utils \
-    iputils-ping \
-    git \
-    wget \
-    sendmail \
-    libpng-dev \
-    libwebp-dev \
-    libjpeg62-turbo-dev \
-    libpng-dev libxpm-dev \
-    libfreetype6-dev \
-    libmagickwand-dev \
+# OS packages
+RUN apt-get update && apt-get install -y \
     curl \
-    gnupg \
-    zlib1g-dev \
     libzip-dev \
+    libicu-dev \
     libxml2-dev \
     libonig-dev \
-    libpq-dev \
-    libc-client-dev \
-    libkrb5-dev \
     zip \
     unzip \
     cron \
-    build-essential \
-    tar \
-    make \
-    tsung
+    procps
 
-RUN pecl install xdebug \
-    && docker-php-ext-enable xdebug
-
-ADD ./php.ini /usr/local/etc/php/php.ini
-
+# Setup clear
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN pecl install imagick \
-    && docker-php-ext-enable imagick
+# PHP extensions
+RUN docker-php-ext-install \
+        pdo_mysql \
+        intl \
+        mbstring \
+        zip \
+        soap \
+        exif \
+        bcmath \
+        pcntl \
+        posix \
+        opcache \
+        && pecl install redis \
+        && docker-php-ext-enable redis
 
-RUN docker-php-ext-configure imap --with-kerberos --with-imap-ssl
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg
+RUN pecl install apcu \
+    && docker-php-ext-enable apcu opcache
 
-RUN docker-php-ext-install pdo_mysql intl mbstring zip gd soap exif bcmath imap pcntl posix
+#Make User and Group
+RUN groupmod -o -g ${GROUP_DOCKER_ID} www-data && \
+    usermod -o -u ${USER_DOCKER_ID} -g www-data www-data
 
-RUN pecl install apcu-5.1.21
-RUN docker-php-ext-enable apcu opcache
+# Npm+node.js
+#RUN curl -sL https://deb.nodesource.com/setup_18.x | bash && \
+#    apt-get install -y nodejs && \
+#    mkdir -p /.npm && \
+#    chmod -R 755 /.npm && \
+#    chown -R ${USER_DOCKER_ID}:${GROUP_DOCKER_ID} /.npm
 
-# Memory Limit
-RUN cd /usr/local/etc/php/conf.d/ && \
-  echo 'memory_limit = -1' >> /usr/local/etc/php/conf.d/docker-php-memlimit.ini
+# HOME for psysh tinker
+#ENV HOME=/var/www
 
-# Install Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+# Access for tinker
+#RUN mkdir -p /var/www/.config && \
+#    chmod -R 775 /var/www/.config && \
+#    chown -R ${USER_DOCKER_ID}:${GROUP_DOCKER_ID} /var/www/.config
 
+# Composer
+ENV COMPOSER_HOME=/var/www/.composer
+ENV COMPOSER_CACHE_DIR=/var/www/.composer/cache
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+RUN echo "$PATH"
+ENV PATH="$PATH:/var/www/.composer/vendor/bin"
+RUN mkdir -p $COMPOSER_CACHE_DIR && chmod -R 777 $COMPOSER_CACHE_DIR
 
-RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
-RUN apt-get install -y nodejs \
-        npm
-RUN echo "NODE Version:" && node --version
-RUN echo "NPM Version:" && npm --version
-
-# Installing Yarn
-RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && \
-    echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list && \
-    apt-get update && apt-get install -y yarn
-
-RUN mkdir -p ${PROJECT_PATH}
-
-RUN mkdir -p /var/www/.config/psysh
-RUN chmod -R 755 /var/www/.config
-
-RUN mkdir -p /var/www/.composer
-RUN chmod -R 755 /var/www/.composer
-RUN chown -R ${USER_DOCKER_ID}:${GROUP_DOCKER_ID} /var/www/.composer
-
-RUN mkdir -p /var/www/.npm
-RUN chmod -R 755 /var/www/.npm
-RUN chown -R ${USER_DOCKER_ID}:${GROUP_DOCKER_ID} /var/www/.npm
-
-#RUN usermod -u ${USER_DOCKER_ID} www-data && groupmod -g ${GROUP_DOCKER_ID} www-data
-RUN chown -R www-data:www-data ${PROJECT_PATH}
-RUN chmod -R 755 ${PROJECT_PATH}
-RUN chown -R ${USER_DOCKER_ID}:${GROUP_DOCKER_ID} /var/www/.config
+# Project access
+RUN mkdir -p ${PROJECT_PATH} && \
+    chown -R ${USER_DOCKER_ID}:${GROUP_DOCKER_ID} ${PROJECT_PATH} && \
+    chmod -R 755 ${PROJECT_PATH}
 
 WORKDIR ${PROJECT_PATH}
+
 USER "${USER_DOCKER_ID}:${GROUP_DOCKER_ID}"

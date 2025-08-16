@@ -1,47 +1,35 @@
 import axios from 'axios'
+import store from '@/boot/store' // чтобы можно было брать токен из Vuex
 
 export const apiClient = axios.create({
   baseURL: process.env.VUE_APP_API_ROOT_URL,
-  withCredentials: false,
+  timeout: 60000,
   headers: {
     'Accept': 'application/json',
-    'Content-Type': 'application/json',
-    mode: 'cors'
-  },
-  timeout: 60 * 1000,
+    'Content-Type': 'application/json'
+  }
 })
 
-apiClient.interceptors.request.use(
-  (config) => {
-    const token =
-      typeof window !== 'undefined'
-        ? localStorage.getItem('auth_token')
-        : null
-    if (token) {
-      config.headers.Authorization = 'Bearer ' + token
-    }
-    return config
-  },
-  function (error) {
-    return Promise.reject(error)
+// Перехват запроса
+apiClient.interceptors.request.use(config => {
+  // Берем токен сначала из Vuex
+  let token = store.state.auth.token
+  // если в state нет токена (например, после перезагрузки) — из localStorage
+  if (!token && typeof window !== 'undefined') {
+    token = localStorage.getItem('auth_token')
   }
-)
 
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+
+  return config
+}, error => Promise.reject(error))
+
+// Перехват ответа
 apiClient.interceptors.response.use(
-  response => {
-    if (response.data) {
-      return response.data
-    }
-
-    return response
-  },
-  error => {
-    if (!error.response) {
-      console.log("Please check your internet connection.");
-    }
-
-    return Promise.reject(error)
-  }
+  response => response.data ? response.data : response,
+  error => Promise.reject(error)
 )
 
 export default { apiClient }
