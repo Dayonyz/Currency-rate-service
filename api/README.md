@@ -19,7 +19,7 @@ password
 
 ## Optimization
 
-- Redis caches used for repository
+- Redis/APC caches used for repository
 - Opcache enabled
 - Optimize docker-compose.yml and nginx settings
 - Laravel caching: php artisan optimize
