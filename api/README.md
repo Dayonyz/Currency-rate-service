@@ -32,45 +32,46 @@ k6 run load_test.js
 
 ### Macbook Pro M1 RAM 16Gb environment, Docker
 ### The final results that could be achieved with A/B tests was: 
-- 640 RPS for Redis cache 
+- 838 RPS for Redis cache 
 ```
-  █ THRESHOLDS 
+   █ THRESHOLDS 
 
     http_req_duration
-    ✓ 'p(90)<3000' p(90)=1.33s
+    ✓ 'p(90)<3000' p(90)=1.02s
 
 
   █ TOTAL RESULTS 
 
-    checks_total.......: 269188  640.912905/s
-    checks_succeeded...: 100.00% 269188 out of 269188
-    checks_failed......: 0.00%   0 out of 269188
+    checks_total.......: 352084  838.285372/s
+    checks_succeeded...: 100.00% 352084 out of 352084
+    checks_failed......: 0.00%   0 out of 352084
 
     ✓ status is 200
 
     HTTP
-    http_req_duration..............: avg=1.07s min=6.2ms med=1.02s max=9.24s  p(90)=1.33s p(95)=2.12s
-      { expected_response:true }...: avg=1.07s min=6.2ms med=1.02s max=9.24s  p(90)=1.33s p(95)=2.12s
-    http_req_failed................: 0.00%  0 out of 269188
-    http_reqs......................: 269188 640.912905/s
+    http_req_duration..............: avg=817.56ms min=4.79ms  med=912.23ms max=2.21s p(90)=1.02s p(95)=1.07s
+      { expected_response:true }...: avg=817.56ms min=4.79ms  med=912.23ms max=2.21s p(90)=1.02s p(95)=1.07s
+    http_req_failed................: 0.00%  0 out of 352084
+    http_reqs......................: 352084 838.285372/s
 
     EXECUTION
-    iteration_duration.............: avg=4.29s min=39ms  med=4.16s max=17.74s p(90)=5.87s p(95)=10.1s
-    iterations.....................: 67297  160.228226/s
-    vus............................: 2      min=2           max=800
+    iteration_duration.............: avg=3.28s    min=34.68ms med=3.72s    max=5.89s p(90)=3.98s p(95)=4.13s
+    iterations.....................: 88021  209.571343/s
+    vus............................: 1      min=1           max=800
     vus_max........................: 800    min=800         max=800
 
     NETWORK
-    data_received..................: 1.2 GB 2.7 MB/s
-    data_sent......................: 54 MB  129 kB/s
+    data_received..................: 1.5 GB 3.6 MB/s
+    data_sent......................: 71 MB  168 kB/s
 
 
 
 
-running (7m00.0s), 000/800 VUs, 67297 complete and 0 interrupted iterations
+running (7m00.0s), 000/800 VUs, 88021 complete and 0 interrupted iterations
 default ✓ [======================================] 000/800 VUs  7m0s
+
 ```
-- 806 RPS for Apc cache, but with lower latency 
+- 806 RPS for Apc cache
 ```
    █ THRESHOLDS 
 
