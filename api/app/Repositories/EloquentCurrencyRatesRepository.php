@@ -52,9 +52,9 @@ class EloquentCurrencyRatesRepository implements CurrencyRatesRepository
     public function getLatestRate(CurrenciesEnum $currency, CurrenciesEnum $baseCurrency): ?array
     {
         if ($this->cacheable) {
-            $cacheKey = "rate_latest:{$currency->name}_{$baseCurrency->name}";
+            $cacheKey = "{$currency->name}_{$baseCurrency->name}:rate_latest";
 
-            $rate = Cache::remember($cacheKey, 1800, function () use ($currency, $baseCurrency) {
+            $rate = Cache::remember($cacheKey, 60*60, function () use ($currency, $baseCurrency) {
                 $latest = Rate::byPairIso($currency ,$baseCurrency)
                     ->latest('id')
                     ->first();
@@ -95,9 +95,9 @@ class EloquentCurrencyRatesRepository implements CurrencyRatesRepository
         }
 
         if ($this->cacheable) {
-            $cacheKey = "rates_paginate:{$currency->name}_{$baseCurrency->name}_{$limit}_{$offset}";
+            $cacheKey = "{$currency->name}_{$baseCurrency->name}:rates_paginate_{$limit}_{$offset}";
 
-            $rates = Cache::remember($cacheKey, 1800, function () use ($query) {
+            $rates = Cache::remember($cacheKey, 60*60, function () use ($query) {
                 return CurrencyRateResource::collection($query->get())->toArray(request());
             });
 
@@ -117,9 +117,9 @@ class EloquentCurrencyRatesRepository implements CurrencyRatesRepository
     public function getRatesTotalCount(CurrenciesEnum $currency, CurrenciesEnum $base): int
     {
         if ($this->cacheable) {
-            $cacheKey = "rates_count:{$currency->name}_{$base->name}";
+            $cacheKey = "{$currency->name}_{$base->name}:rates_count";
 
-            $itemsCount = Cache::remember($cacheKey, 1800, function () use ($currency, $base) {
+            $itemsCount = Cache::remember($cacheKey, 60*60, function () use ($currency, $base) {
                 return Rate::byPairIso($currency, $base)->count();
             });
 

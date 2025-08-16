@@ -34,7 +34,7 @@ k6 run load_test.js
 ### The final results that could be achieved with A/B tests was: 
 - 640 RPS for Redis cache 
 ```
-█ THRESHOLDS 
+  █ THRESHOLDS 
 
     http_req_duration
     ✓ 'p(90)<3000' p(90)=1.33s
@@ -63,38 +63,50 @@ k6 run load_test.js
     NETWORK
     data_received..................: 1.2 GB 2.7 MB/s
     data_sent......................: 54 MB  129 kB/s
+
+
+
+
+running (7m00.0s), 000/800 VUs, 67297 complete and 0 interrupted iterations
+default ✓ [======================================] 000/800 VUs  7m0s
 ```
-- 724 RPS for Apc cache, but with lower latency 
+- 806 RPS for Apc cache, but with lower latency 
 ```
- █ THRESHOLDS 
+   █ THRESHOLDS 
 
     http_req_duration
-    ✓ 'p(90)<3000' p(90)=1.11s
+    ✓ 'p(90)<3000' p(90)=1.07s
 
 
   █ TOTAL RESULTS 
 
-    checks_total.......: 306040  728.63605/s
-    checks_succeeded...: 100.00% 306040 out of 306040
-    checks_failed......: 0.00%   0 out of 306040
+    checks_total.......: 338672  806.284131/s
+    checks_succeeded...: 100.00% 338672 out of 338672
+    checks_failed......: 0.00%   0 out of 338672
 
     ✓ status is 200
 
     HTTP
-    http_req_duration..............: avg=941.64ms min=5.32ms  med=973.18ms max=5.36s  p(90)=1.11s p(95)=1.25s
-      { expected_response:true }...: avg=941.64ms min=5.32ms  med=973.18ms max=5.36s  p(90)=1.11s p(95)=1.25s
-    http_req_failed................: 0.00%  0 out of 306040
-    http_reqs......................: 306040 728.63605/s
+    http_req_duration..............: avg=850.21ms min=5.26ms  med=932.92ms max=2.66s p(90)=1.07s p(95)=1.13s
+      { expected_response:true }...: avg=850.21ms min=5.26ms  med=932.92ms max=2.66s p(90)=1.07s p(95)=1.13s
+    http_req_failed................: 0.00%  0 out of 338672
+    http_reqs......................: 338672 806.284131/s
 
     EXECUTION
-    iteration_duration.............: avg=3.77s    min=39.09ms med=3.96s    max=12.44s p(90)=4.48s p(95)=5.08s
-    iterations.....................: 76510  182.159013/s
+    iteration_duration.............: avg=3.41s    min=35.77ms med=3.83s    max=6.21s p(90)=4.15s p(95)=4.31s
+    iterations.....................: 84668  201.571033/s
     vus............................: 1      min=1           max=800
     vus_max........................: 800    min=800         max=800
 
     NETWORK
-    data_received..................: 1.3 GB 3.1 MB/s
-    data_sent......................: 61 MB  146 kB/s
+    data_received..................: 1.4 GB 3.4 MB/s
+    data_sent......................: 68 MB  162 kB/s
+
+
+
+
+running (7m00.0s), 000/800 VUs, 84668 complete and 0 interrupted iterations
+default ✓ [======================================] 000/800 VUs  7m0s
 ```
 
 

@@ -37,12 +37,15 @@ Route::get('/cache-test', function () {
 });
 
 Route::get('/cache', function () {
-    $value_store = Cache::remember('t_test', 1800, function ()  {
-        return 'test_value';
-    });
+    $info = apcu_cache_info(true);
+    $mem = apcu_sma_info(true);
 
-    $value_get = Cache::get('t_test');
-
-    dd($value_store, $value_get);
+    echo "=== APCu Info ===\n";
+    echo "Num Entries: " . $info['num_entries'] . "\n";
+    echo "Num Hits:    " . $info['num_hits'] . "\n";
+    echo "Num Misses:  " . $info['num_misses'] . "\n";
+    echo "Memory Size: " . $mem['seg_size'] . "\n";
+    echo "Avail Mem:   " . $mem['avail_mem'] . "\n";
+    echo "================\n\n";
 
 });

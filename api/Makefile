@@ -153,7 +153,7 @@ install: ## Install for dev work
 	rm -rf .docker/redis/data/*
 	@make start && \
 	docker-compose exec $(sshContainer) bash -c "\
-		composer install --optimize-autoloader && \
+		composer install --optimize-autoloader --no-dev && \
 		php artisan key:generate && \
 		php artisan config:clear && \
 		php artisan route:clear && \

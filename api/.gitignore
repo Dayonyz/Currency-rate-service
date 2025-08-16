@@ -21,3 +21,13 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+.DS_Store
+api/.docker/.DS_Store
+api/.docker/mysql/.DS_Store
+api/app/.DS_Store
+api/database/.DS_Store
+api/resources/.DS_Store
+api/storage/.DS_Store
+api/tests/.DS_Store
+

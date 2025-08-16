@@ -41,15 +41,6 @@ export const options = {
 export default function () {
     const token = tokens[Math.floor(Math.random() * tokens.length)];
     
-    let res1 = http.get("{$baseUrl}/api/currency/rate/EUR/USD", {
-        headers: {
-            'Accept': 'application/json',
-            'Authorization': `Bearer \${token}`
-        },
-    });
-    
-    check(res1, { 'status is 200': (r) => r.status === 200 });
-    
     const sizes = [
         { size: 20, maxPage: 30 },
         { size: 30, maxPage: 20 },
@@ -59,6 +50,15 @@ export default function () {
     
     const item = sizes[Math.floor(Math.random() * sizes.length)];
     const page = Math.floor(Math.random() * item.maxPage) + 1;
+    
+    let res1 = http.get("{$baseUrl}/api/currency/rate/EUR/USD", {
+        headers: {
+            'Accept': 'application/json',
+            'Authorization': `Bearer \${token}`
+        },
+    });
+    
+    check(res1, { 'status is 200': (r) => r.status === 200 });
     
     let res2 = http.get(`{$baseUrl}/api/currency/rates/EUR/USD/\${item.size}/1`, {
             headers: {
