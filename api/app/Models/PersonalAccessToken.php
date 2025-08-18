@@ -36,23 +36,25 @@ class PersonalAccessToken extends BaseToken
      */
     public static function findToken($token)
     {
-        $redisKey = 'sanctum_auth:' . hash('sha256', $token);
+        if (config('sanctum.cache')) {
+            $redisKey = 'sanctum_auth:' . hash('sha256', $token);
 
-        $modelData = Cache::driver('redis')->get($redisKey);
+            $modelData = Cache::driver(config('sanctum.cache'))->get($redisKey);
 
-        if (!empty($modelData)) {
+            if (!empty($modelData)) {
 
-            $instance = unserialize($modelData);
+                $instance = unserialize($modelData);
 
-            if (!str_contains($token, '|')) {
-                return $instance->token === hash('sha256', $token) ? $instance : null;
+                if (!str_contains($token, '|')) {
+                    return $instance->token === hash('sha256', $token) ? $instance : null;
+                }
+
+                [$id, $token] = explode('|', $token, 2);
+
+                return $instance->id === intval($id) && hash_equals($instance->token, hash('sha256', $token)) ?
+                    $instance :
+                    null;
             }
-
-            [$id, $token] = explode('|', $token, 2);
-
-            return $instance->id === intval($id) && hash_equals($instance->token, hash('sha256', $token)) ?
-                $instance :
-                null;
         }
 
         return parent::findToken($token);
@@ -63,7 +65,9 @@ class PersonalAccessToken extends BaseToken
      */
     public function delete(): ?bool
     {
-        Cache::driver('redis')->delete($this->key);
+        if (config('sanctum.cache')) {
+            Cache::driver(config('sanctum.cache'))->delete($this->key);
+        }
 
         return parent::delete();
     }
