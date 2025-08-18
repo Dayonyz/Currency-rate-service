@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Queue\SerializesAndRestoresModelIdentifiers;
 use Illuminate\Queue\SerializesModels;
 use Laravel\Sanctum\PersonalAccessToken as BaseToken;
@@ -10,7 +11,7 @@ use Psr\SimpleCache\InvalidArgumentException;
 
 class PersonalAccessToken extends BaseToken
 {
-    use SerializesModels, SerializesAndRestoresModelIdentifiers;
+    use SerializesModels, SerializesAndRestoresModelIdentifiers, SoftDeletes;
     /**
      * The attributes that should be hidden for serialization.
      *
@@ -29,7 +30,46 @@ class PersonalAccessToken extends BaseToken
         'token',
         'abilities',
         'expires_at',
+        'version'
     ];
+
+    protected static function boot(): void
+    {
+        parent::boot();
+
+        static::updating(function ($model) {
+            if (config('sanctum.cache')) {
+                $cachedVersion = Cache::driver(config('sanctum.cache'))
+                    ->get('sanctum_auth_version:' . $model->key);
+
+                if ($cachedVersion && $model->version >= $cachedVersion) {
+                    $cacheValue = serialize($model);
+
+                    if ($model->expires_at) {
+                        Cache::driver(config('sanctum.cache'))
+                            ->put(
+                                'sanctum_auth:' . $model->key,
+                                $cacheValue,
+                                $model->expires_at
+                            );
+                    } else {
+                        Cache::driver(config('sanctum.cache'))
+                            ->rememberForever('sanctum_auth:' . $model->key, function () use ($cacheValue) {
+                                return $cacheValue;
+                            });
+                    }
+                } else {
+                    return false;
+                }
+            }
+        });
+
+        static::deleting(function ($model) {
+            if (config('sanctum.cache')) {
+                Cache::driver(config('sanctum.cache'))->delete('sanctum_auth:' . $model->key);
+            }
+        });
+    }
 
     /**
      * @throws InvalidArgumentException
@@ -37,38 +77,43 @@ class PersonalAccessToken extends BaseToken
     public static function findToken($token)
     {
         if (config('sanctum.cache')) {
-            $redisKey = 'sanctum_auth:' . hash('sha256', $token);
+            $key = hash('sha256', $token);
+            $modelCacheKey = 'sanctum_auth:' . $key;
+            $versionCacheKey = 'sanctum_auth_version:' . $key;
 
-            $modelData = Cache::driver(config('sanctum.cache'))->get($redisKey);
+            $modelData = Cache::driver(config('sanctum.cache'))->get($modelCacheKey);
 
             if (!empty($modelData)) {
-
                 $instance = unserialize($modelData);
 
-                if (!str_contains($token, '|')) {
-                    return $instance->token === hash('sha256', $token) ? $instance : null;
+                $getValidInstance = function () use ($token, $instance, $key) {
+                    if (!str_contains($token, '|')) {
+                        return $instance->token === $key ? $instance : null;
+                    }
+
+                    [$id, $token] = explode('|', $token, 2);
+
+                    return $instance->id === intval($id) && hash_equals($instance->token, hash('sha256', $token)) ?
+                        $instance :
+                        null;
+                };
+
+                $instance = $getValidInstance();
+
+
+                if ($instance) {
+                    $version = (int)(microtime(true) * 1000000);
+
+                    Cache::driver(config('sanctum.cache'))
+                        ->put($versionCacheKey, $version);
+
+                    $instance->version = $version;
                 }
 
-                [$id, $token] = explode('|', $token, 2);
-
-                return $instance->id === intval($id) && hash_equals($instance->token, hash('sha256', $token)) ?
-                    $instance :
-                    null;
+                return $instance;
             }
         }
 
         return parent::findToken($token);
-    }
-
-    /**
-     * @throws InvalidArgumentException
-     */
-    public function delete(): ?bool
-    {
-        if (config('sanctum.cache')) {
-            Cache::driver(config('sanctum.cache'))->delete($this->key);
-        }
-
-        return parent::delete();
     }
 }

@@ -56,7 +56,6 @@ class User extends Authenticatable
         array $abilities = ['*'],
         ?DateTimeInterface $expiresAt = null
     ): NewAccessToken {
-
         $plainTextToken = $this->generateTokenString();
 
         $token = $this->tokens()->create([
@@ -64,23 +63,25 @@ class User extends Authenticatable
             'token' => hash('sha256', $plainTextToken),
             'abilities' => $abilities,
             'expires_at' => $expiresAt,
+            'version' => (int) (microtime(true) * 1000000)
         ]);
 
         $fullToken = $token->getKey() . '|' . $plainTextToken;
 
         if (config('sanctum.cache')) {
-            $redisKey = 'sanctum_auth:' . hash('sha256', $fullToken);
+            $key = hash('sha256', $fullToken);
+            $modelCacheKey = 'sanctum_auth:' . $key;
 
-            $token->key = $redisKey;
+            $token->key = $key;
             $token->save();
 
-            $redisValue = serialize($token);
+            $cacheValue = serialize($token);
 
             if ($expiresAt) {
-                Cache::driver(config('sanctum.cache'))->put($redisKey, $redisValue, $expiresAt);
+                Cache::driver(config('sanctum.cache'))->put($modelCacheKey, $cacheValue, $expiresAt);
             } else {
-                Cache::driver(config('sanctum.cache'))->rememberForever($redisKey, function () use ($redisValue) {
-                    return $redisValue;
+                Cache::driver(config('sanctum.cache'))->rememberForever($modelCacheKey, function () use ($cacheValue) {
+                    return $cacheValue;
                 });
             }
         }

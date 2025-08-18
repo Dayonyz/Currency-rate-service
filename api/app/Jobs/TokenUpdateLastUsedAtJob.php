@@ -12,29 +12,25 @@ class TokenUpdateLastUsedAtJob implements ShouldQueue
 {
     use InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $tokenId;
+    public PersonalAccessToken $token;
     public string $now;
 
-    public function __construct(int $tokenId, string $now)
+    public function __construct(PersonalAccessToken $token, string $now)
     {
-        $this->tokenId = $tokenId;
+        $this->token = $token;
         $this->now = $now;
     }
 
     public function handle()
     {
-        $accessToken = PersonalAccessToken::find($this->tokenId);
+        if (method_exists($this->token->getConnection(), 'hasModifiedRecords') &&
+            method_exists($this->token->getConnection(), 'setRecordModificationState')) {
+            $hasModifiedRecords = $this->token->getConnection()->hasModifiedRecords();
+            $this->token->forceFill(['last_used_at' => $this->now])->save();
 
-        if ($accessToken) {
-            if (method_exists($accessToken->getConnection(), 'hasModifiedRecords') &&
-                method_exists($accessToken->getConnection(), 'setRecordModificationState')) {
-                $hasModifiedRecords = $accessToken->getConnection()->hasModifiedRecords();
-                $accessToken->forceFill(['last_used_at' => $this->now])->save();
-
-                $accessToken->getConnection()->setRecordModificationState($hasModifiedRecords);
-            } else {
-                $accessToken->forceFill(['last_used_at' => $this->now])->save();
-            }
+            $this->token->getConnection()->setRecordModificationState($hasModifiedRecords);
+        } else {
+            $this->token->forceFill(['last_used_at' => $this->now])->save();
         }
     }
 }
