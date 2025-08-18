@@ -69,7 +69,7 @@ class GenerateStressTestFiles extends Command
         K6StressTestService::generateStressTestFile(
             $tokens,
             'http://127.0.0.1:' . config('app.docker_nginx_port',),
-            800
+            850
         );
     }
 }

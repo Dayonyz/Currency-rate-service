@@ -1,4 +1,4 @@
-# Currency Rates Service
+# Currency Rates Service -  application for fetching currency rates and viewing them via UI, optimized for high load
 
 ## Backend Deploy
 
@@ -110,5 +110,8 @@ running (7m00.0s), 000/800 VUs, 84668 complete and 0 interrupted iterations
 default ✓ [======================================] 000/800 VUs  7m0s
 ```
 
+### Next application level is minimize Sql queries from Sanctum removing its tokens to a cache and creating horizontal scaling
+
+#### To be continued ;)
 
 

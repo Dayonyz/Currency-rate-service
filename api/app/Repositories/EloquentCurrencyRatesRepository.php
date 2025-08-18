@@ -9,19 +9,20 @@ use App\Models\Rate;
 use App\Repositories\Contracts\CurrencyRatesRepository;
 use ErrorException;
 use Exception;
-use Illuminate\Support\Facades\Cache;
 use JetBrains\PhpStorm\ArrayShape;
 use Psr\SimpleCache\InvalidArgumentException;
+use Illuminate\Contracts\Cache\Repository as CacheInterface;
 
 class EloquentCurrencyRatesRepository implements CurrencyRatesRepository
 {
     private int $limit;
-    private bool $cacheable;
+    private ?CacheInterface $cache;
 
-    public function __construct(bool $cacheable)
+    public function __construct(? CacheInterface $cache)
     {
         $this->limit = min(config('repository.eloquent.limits'));
-        $this->cacheable = $cacheable;
+
+        $this->cache = $cache;
     }
 
     /**
@@ -51,10 +52,10 @@ class EloquentCurrencyRatesRepository implements CurrencyRatesRepository
     #[ArrayShape(['currency' => "array", 'base_currency' => "array", 'rate' => "mixed", 'actual_at' => "mixed"])]
     public function getLatestRate(CurrenciesEnum $currency, CurrenciesEnum $baseCurrency): ?array
     {
-        if ($this->cacheable) {
+        if ($this->cache) {
             $cacheKey = "{$currency->name}_{$baseCurrency->name}:rate_latest";
 
-            $rate = Cache::remember($cacheKey, 60*60, function () use ($currency, $baseCurrency) {
+            $rate = $this->cache->remember($cacheKey, 60*60, function () use ($currency, $baseCurrency) {
                 $latest = Rate::byPairIso($currency ,$baseCurrency)
                     ->latest('id')
                     ->first();
@@ -63,7 +64,7 @@ class EloquentCurrencyRatesRepository implements CurrencyRatesRepository
             });
 
             if (!$rate) {
-                Cache::forget($cacheKey);
+                $this->cache->forget($cacheKey);
 
                 return null;
             }
@@ -94,15 +95,15 @@ class EloquentCurrencyRatesRepository implements CurrencyRatesRepository
             $query->offset($offset);
         }
 
-        if ($this->cacheable) {
+        if ($this->cache) {
             $cacheKey = "{$currency->name}_{$baseCurrency->name}:rates_paginate_{$limit}_{$offset}";
 
-            $rates = Cache::remember($cacheKey, 60*60, function () use ($query) {
+            $rates = $this->cache->remember($cacheKey, 60*60, function () use ($query) {
                 return CurrencyRateResource::collection($query->get())->toArray(request());
             });
 
             if (count($rates) === 0) {
-                Cache::forget($cacheKey);
+                $this->cache->forget($cacheKey);
 
                 return [];
             }
@@ -116,15 +117,15 @@ class EloquentCurrencyRatesRepository implements CurrencyRatesRepository
      */
     public function getRatesTotalCount(CurrenciesEnum $currency, CurrenciesEnum $base): int
     {
-        if ($this->cacheable) {
+        if ($this->cache) {
             $cacheKey = "{$currency->name}_{$base->name}:rates_count";
 
-            $itemsCount = Cache::remember($cacheKey, 60*60, function () use ($currency, $base) {
+            $itemsCount = $this->cache->remember($cacheKey, 60*60, function () use ($currency, $base) {
                 return Rate::byPairIso($currency, $base)->count();
             });
 
             if ($itemsCount === 0) {
-                Cache::forget($cacheKey);
+                $this->cache->forget($cacheKey);
             }
 
             return $itemsCount;

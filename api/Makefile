@@ -1,4 +1,4 @@
-serviceList=php nginx mysql redis
+serviceList=php nginx mysql redis queue-worker
 sshContainer=php
 mysqlContainer=mysql
 
