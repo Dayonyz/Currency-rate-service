@@ -8,17 +8,20 @@ class K6StressTestService
 {
     /**
      * @param array $tokens
+     * @param array $pageSizes
      * @param string $baseUrl
      * @param int $rps
      * @param string $filename
      */
     public static function generateStressTestFile(
         array $tokens,
+        array $pageSizes,
         string $baseUrl = 'http://localhost:8080',
         int $rps = 1500,
         string $filename = 'load_test.js'
     ): void {
         $tokensJson = json_encode($tokens, JSON_PRETTY_PRINT);
+        $pageSizesJson = json_encode($pageSizes, JSON_PRETTY_PRINT);
 
         $content = <<<JS
 import http from 'k6/http';
@@ -26,6 +29,8 @@ import { sleep } from 'k6';
 import { check } from 'k6';
 
 const tokens = $tokensJson;
+
+const sizes = $pageSizesJson;
 
 export const options = {
     stages: [
@@ -39,14 +44,7 @@ export const options = {
 };
 
 export default function () {
-    const token = tokens[Math.floor(Math.random() * tokens.length)];
-    
-    const sizes = [
-        { size: 20, maxPage: 30 },
-        { size: 30, maxPage: 20 },
-        { size: 50, maxPage: 12 },
-        { size: 100, maxPage: 6 },
-    ];
+    let token = tokens[Math.floor(Math.random() * tokens.length)];
     
     const item = sizes[Math.floor(Math.random() * sizes.length)];
     const page = Math.floor(Math.random() * item.maxPage) + 1;

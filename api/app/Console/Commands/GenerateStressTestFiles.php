@@ -46,7 +46,6 @@ class GenerateStressTestFiles extends Command
             ])->createToken(config('app.name'))->plainTextToken;
         }
 
-
         $limits = config('repository.eloquent.limits');
 
         $ratesCount = $this->currencyRatesRepository->getRatesTotalCount(
@@ -60,16 +59,17 @@ class GenerateStressTestFiles extends Command
             return self::FAILURE;
         }
 
-        $pagesCount = [];
+        $pageSizes = [];
 
         foreach ($limits as $limit) {
-            $pagesCount[$limit] = ceil($ratesCount/$limit);
+            $pageSizes[] = ['size' => $limit, 'maxPage' => ceil($ratesCount/$limit)];
         }
 
         K6StressTestService::generateStressTestFile(
             $tokens,
+            $pageSizes,
             'http://127.0.0.1:' . config('app.docker_nginx_port',),
-            850
+            800
         );
     }
 }
