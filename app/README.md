@@ -1,4 +1,6 @@
-# Frontend Deploy - Build docker container
+# Currency Rates Service -  UI application using Vue.js 2.6
+
+## Frontend Deploy - Build docker container
 
 ## Deploy API before!!! See in api/Readme.md
 
