@@ -1,5 +1,7 @@
 serviceList=php nginx mysql redis queue-worker
+octaneServiceList=php-worker nginx mysql redis queue-worker
 sshContainer=php
+
 mysqlContainer=mysql
 
 build: ## Builds Docker file
@@ -134,6 +136,22 @@ set-docker-server-name: ## Set DOCKER_SERVER_NAME in .env
 	rm -f .env.bak; \
 	echo "Set DOCKER_SERVER_NAME=$$FINAL_NAME"
 
+set-app-url:
+	@HOST=$$(grep '^APP_HOST=' .env | cut -d '=' -f2); \
+	PORT=$$(grep '^DOCKER_NGINX_PORT=' .env | cut -d '=' -f2); \
+	if [ -z "$$HOST" ] || [ -z "$$PORT" ]; then \
+		echo "❌ APP_HOST or DOCKER_NGINX_PORT is missing in .env"; \
+		exit 1; \
+	fi; \
+	URL="$$HOST:$$PORT"; \
+	echo "✅ APP_URL=$$URL"; \
+	if grep -q '^APP_URL=' .env; then \
+		sed -i.bak "s|^APP_URL=.*|APP_URL=$$URL|" .env; \
+	else \
+		echo "APP_URL=$$URL" >> .env; \
+	fi; \
+	rm -f .env.bak
+
 generate-env: ## Creates .env from .env.example
 	cp .env.example .env
 	@make set-app-slug
@@ -146,6 +164,7 @@ generate-env: ## Creates .env from .env.example
 	@make set-xdebug-port
 	@make set-docker-server-name
 	@make set-docker-remote-host
+	@make set-app-url
 
 install: ## Install for dev work
 	@make stop && \
@@ -166,27 +185,8 @@ install: ## Install for dev work
 		php artisan app:fetch-currency-rates-since --currency=EUR --base=USD --M=01 --Y=2024 && \
 		php artisan app:generate-stress-test-files"
 
-load-test: ## Install for load test
-	@make stop
-	rm -rf .docker/mysql/volumes/*
-	rm -rf .docker/redis/data/*
-	docker-compose -f docker-compose.yml -f docker-compose.override.loadtest.yml up -d --build
-
-	docker-compose exec $(sshContainer) bash -c "\
-		composer install --no-dev --no-scripts && \
-		composer dump-autoload --optimize && \
-		php artisan key:generate && \
-		php artisan config:cache && \
-		php artisan route:cache && \
-		php artisan view:cache && \
-		php artisan migrate:fresh --seed && \
-		php artisan app:fetch-currency-rates-since --currency=EUR --base=USD --M=01 --Y=2024"
-
 kill: ## Stops all docker containers
 	docker stop $(shell docker ps -aq)
-
-start-load-test: ## Starts docker-compose for stress testing
-	docker-compose -f docker-compose.yml -f docker-compose.override.loadtest.yml up -d $(serviceList)
 
 start: ## Starts docker-compose
 	docker-compose up -d $(serviceList)

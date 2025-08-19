@@ -5,6 +5,7 @@
 ```
 cd api
 make build
+make generate-env
 make install
 ```
 
