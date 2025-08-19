@@ -114,4 +114,60 @@ default ✓ [======================================] 000/800 VUs  7m0s
 
 #### To be continued ;)
 
+### Conducted optimization: 
+ - Sanctum: Redis cache, asynchronous tokens updates, race elimination 
+ - APCu: Main repository cache, 
+ - PHP-FPM: Max value pm.max_children = 200.
+
+#### Now the result:
+
+```
+█ THRESHOLDS 
+
+    http_req_duration
+    ✓ 'p(90)<3000' p(90)=1.4s
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 328596  782.344888/s
+    checks_succeeded...: 100.00% 328596 out of 328596
+    checks_failed......: 0.00%   0 out of 328596
+
+    ✓ status is 200
+
+    HTTP
+    http_req_duration..............: avg=1.09s min=4.96ms  med=1.2s  max=2.71s p(90)=1.4s  p(95)=1.48s
+      { expected_response:true }...: avg=1.09s min=4.96ms  med=1.2s  max=2.71s p(90)=1.4s  p(95)=1.48s
+    http_req_failed................: 0.00%  0 out of 328596
+    http_reqs......................: 328596 782.344888/s
+
+    EXECUTION
+    iteration_duration.............: avg=4.39s min=32.34ms med=4.94s max=6.78s p(90)=5.41s p(95)=5.6s 
+    iterations.....................: 82149  195.586222/s
+    vus............................: 2      min=2           max=1000
+    vus_max........................: 1000   min=1000        max=1000
+
+    NETWORK
+    data_received..................: 1.4 GB 3.4 MB/s
+    data_sent......................: 66 MB  157 kB/s
+
+
+
+
+running (7m00.0s), 0000/1000 VUs, 82149 complete and 0 interrupted iterations
+default ✓ [======================================] 0000/1000 VUs  7m0s
+```
+
+- RPS ≈ 780 is stable at 1000 VU and at the same time no fails (0% http_req_failed)
+
+- Latency p90 = 1.4s - means the system can handle the load, but has a limitation.
+
+### Conclusions
+
+The bottleneck has been found – RPS has hit the performance limit of the current stack.
+That is, the system handles the load without errors, but the increase in the number of users does not increase RPS - this means the CPU-bound or IO-bound limit has already been reached.
+
+RPS does not grow, but is stable, so the system is scalable, but does not accelerate further on one instance.
+
 

@@ -27,15 +27,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('logout', [AuthController::class, 'logout']);
 });
 
-Route::get('/cache-test', function () {
-    $value = app()->call(function () {
-        return (new EloquentCurrencyRatesRepository(true))
-            ->getLatestRate(CurrenciesEnum::EUR, CurrenciesEnum::USD);
-    });
-
-    return $value;
-});
-
 Route::get('/cache', function () {
     $info = apcu_cache_info(true);
     $mem = apcu_sma_info(true);
@@ -47,5 +38,4 @@ Route::get('/cache', function () {
     echo "Memory Size: " . $mem['seg_size'] . "\n";
     echo "Avail Mem:   " . $mem['avail_mem'] . "\n";
     echo "================\n\n";
-
 });
