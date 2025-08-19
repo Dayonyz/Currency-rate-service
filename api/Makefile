@@ -50,7 +50,6 @@ set-nginx-port-stress: ## Sets the first free port starting from 8080 to .env as
 	sed -i.bak -e "s/^DOCKER_NGINX_PORT=.*/DOCKER_NGINX_PORT=$$PORT/" .env && rm -f .env.bak; \
 	echo "DOCKER_NGINX_PORT set into .env"
 
-
 set-nginx-ssl-port: ## Sets the first free port starting from 8443 to .env as DOCKER_NGINX_SSL_PORT
 	@PLATFORM=$$(uname); \
 	PORT=8443; \
