@@ -30,7 +30,7 @@ cd api
 k6 run load_test.js
 ```
 
-### Macbook Pro M1 RAM 16Gb environment, Docker
+### Macbook Pro M1 RAM 16Gb environment, Docker - 14 Gb Ram, 8 CPU, no Swap
 ### The final results that could be achieved with A/B tests was: 
 - 838 RPS for Redis cache 
 ```
