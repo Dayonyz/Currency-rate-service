@@ -70,19 +70,28 @@ class User extends Authenticatable
 
         if (config('sanctum.cache')) {
             $key = hash('sha256', $fullToken);
-            $modelCacheKey = 'sanctum_auth:' . $key;
+            $tokenCacheKey = 'sanctum_auth:' . $key;
+            $userCacheKey = 'sanctum_auth_tokenable:' . $key;
 
             $token->key = $key;
             $token->save();
 
-            $cacheValue = serialize($token);
+            $tokenCacheValue = serialize($token);
+            $userCacheValue = serialize($this);
 
             if ($expiresAt) {
-                Cache::driver(config('sanctum.cache'))->put($modelCacheKey, $cacheValue, $expiresAt);
+                Cache::driver(config('sanctum.cache'))->put($tokenCacheKey, $tokenCacheValue, $expiresAt);
+                Cache::driver(config('sanctum.cache'))->put($userCacheKey, $userCacheValue, $expiresAt);
             } else {
-                Cache::driver(config('sanctum.cache'))->rememberForever($modelCacheKey, function () use ($cacheValue) {
-                    return $cacheValue;
-                });
+                Cache::driver(config('sanctum.cache'))
+                    ->rememberForever($tokenCacheKey, function () use ($tokenCacheValue) {
+                        return $tokenCacheValue;
+                    });
+
+                Cache::driver(config('sanctum.cache'))
+                    ->rememberForever($userCacheKey, function () use ($userCacheValue) {
+                        return $userCacheValue;
+                    });
             }
         }
 

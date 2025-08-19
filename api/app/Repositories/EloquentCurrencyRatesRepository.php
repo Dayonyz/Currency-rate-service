@@ -60,13 +60,15 @@ class EloquentCurrencyRatesRepository implements CurrencyRatesRepository
                     ->latest('id')
                     ->first();
 
-                return !$latest ?: CurrencyRateResource::make($latest)->toArray(request());
+                return CurrencyRateResource::make($latest)->toArray(request());
             });
 
-            if (!$rate) {
+            if (empty($rate)) {
                 $this->cache->forget($cacheKey);
 
-                return null;
+                return [];
+            } else {
+                return $rate;
             }
         }
 
@@ -102,10 +104,12 @@ class EloquentCurrencyRatesRepository implements CurrencyRatesRepository
                 return CurrencyRateResource::collection($query->get())->toArray(request());
             });
 
-            if (count($rates) === 0) {
+            if (empty($rates)) {
                 $this->cache->forget($cacheKey);
 
                 return [];
+            } else {
+                return $rates;
             }
         }
 

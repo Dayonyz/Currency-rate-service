@@ -68,8 +68,8 @@ class GenerateStressTestFiles extends Command
         K6StressTestService::generateStressTestFile(
             $tokens,
             $pageSizes,
-            'http://127.0.0.1:' . config('app.docker_nginx_port',),
-            800
+            'http://127.0.0.1:' . config('app.docker_nginx_port'),
+            1000
         );
     }
 }

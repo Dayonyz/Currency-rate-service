@@ -77,7 +77,6 @@ return [
         'redis' => [
             'driver' => 'redis',
             'connection' => 'cache',
-            'taggable' => true,
         ],
 
         'dynamodb' => [

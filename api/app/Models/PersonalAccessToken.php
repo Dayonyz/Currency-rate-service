@@ -74,6 +74,30 @@ class PersonalAccessToken extends BaseToken
     /**
      * @throws InvalidArgumentException
      */
+    public function getTokenableAttribute(): mixed
+    {
+        if (config('sanctum.cache')) {
+            $modelCacheKey = 'sanctum_auth_tokenable:' . $this->key;
+            $modelData = Cache::driver(config('sanctum.cache'))->get($modelCacheKey);
+
+            if ($modelData) {
+                $instance = unserialize($modelData);
+
+                if (is_object($instance) &&
+                    $instance->id === $this->tokenable_id &&
+                    $instance::class === $this->tokenable_type
+                ) {
+                    return $instance;
+                }
+            }
+        }
+
+        return parent::tokenable()->get();
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
     public static function findToken($token)
     {
         if (config('sanctum.cache')) {
