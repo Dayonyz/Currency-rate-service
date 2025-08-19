@@ -116,7 +116,7 @@ default ✓ [======================================] 000/800 VUs  7m0s
 
 ### Conducted optimization: 
  - Sanctum: Redis cache, asynchronous tokens updates, race elimination 
- - APCu: Main repository cache, 
+ - APCu: Main repository cache, session cache 
  - PHP-FPM: Max value pm.max_children = 200.
 
 #### Now the result:
