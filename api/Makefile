@@ -203,7 +203,7 @@ install: ## Install Laravel for dev work
 		php artisan app:generate-stress-test-files"
 
 install-octane: ## Install Laravel with octane for dev work
-	docker rm -f api-php-worker-1 api-php-worker-2 api-php-worker-3 api-php-worker-4
+	docker rm -f api-php-worker-1 api-php-worker-2 api-php-worker-3 api-php-worker-4 currency-rates-fetching-haproxy
 	@make stop-octane
 	@sleep 3
 	rm -rf .docker/mysql/volumes/*
