@@ -346,7 +346,7 @@ running (7m00.0s), 0000/1500 VUs, 117190 complete and 0 interrupted iterations
 default ✓ [======================================] 0000/1500 VUs  7m0s
 ```
 
-After several sleepless nights and attempts to scale to several octane instances on lightweight HAProxy, I hit the ceiling - 1000 RPS 1.6 s http response and no more. I realized that I forgot something important. And yes, I forgot. This is a MacBook and this is a local machine, not balancing between several servers. So my answer was... x-mutagen and disabling any proxies and balancers. I hope you read this far :)
+After several sleepless nights and attempts to scale to several octane instances on lightweight HAProxy, I hit the ceiling - 1000 RPS 1.6 s http response and no more. I realized that I forgot something important. And yes, I forgot. This is a MacBook M1 and this is a local machine, not balancing between several servers. So my answer was... x-mutagen and disabling any proxies and balancers. I hope you read this far :)
 
 **🔥 And here is the long-awaited result and our goal: 2076 RPS, 936 ms http_req_duration 🔥**
 
