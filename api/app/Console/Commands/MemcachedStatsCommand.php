@@ -31,7 +31,7 @@ class MemcachedStatsCommand extends Command
 
         if ($stats === false) {
             $this->error("Connection to memcached failed");
-            return Command::FAILURE;
+            return $this::FAILURE;
         }
 
         foreach ($stats as $server => $stat) {
