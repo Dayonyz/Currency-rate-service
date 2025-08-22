@@ -1,0 +1,172 @@
+version: "3.9"
+
+volumes:
+    code:
+    db:
+    redis:
+
+services:
+    php-worker:
+        build:
+            context: ./
+            dockerfile: .docker/php-swoole/Dockerfile
+            args:
+                - USER_DOCKER_ID=${DOCKER_USER_ID}
+                - GROUP_DOCKER_ID=${DOCKER_GROUP_ID}
+                - PROJECT_PATH=${DOCKER_CODE_FOLDER}
+        environment:
+            APP_ENV: production
+        volumes:
+            - ./.docker/php-swoole/php.ini:/usr/local/etc/php/php.ini
+            - code:${DOCKER_CODE_FOLDER}:delegated
+        working_dir: ${DOCKER_CODE_FOLDER}
+        command: php artisan octane:start --server=swoole --host=0.0.0.0 --port=8000 --workers=8 --task-workers=4 --max-requests=4500
+        depends_on:
+            mysql:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+            memcached:
+                condition: service_started
+        ports:
+            - "${DOCKER_NGINX_PORT}:8000"
+        networks:
+            - backend-octane
+        deploy:
+            replicas: 1
+        healthcheck:
+            test: ["CMD-SHELL", "php -r 'exit((@fsockopen(\"127.0.0.1\",8000)) ? 0 : 1);'"]
+            interval: 3s
+            timeout: 2s
+            retries: 5
+            start_period: 5s
+#    haproxy:
+#        image: haproxy:2.9
+#        container_name: "${DOCKER_APP_SLUG}-haproxy"
+#        ports:
+#            - "${DOCKER_NGINX_PORT}:80"
+#        volumes:
+#            - ./.docker/haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+#        networks:
+#            - backend-octane
+#        depends_on:
+#            php-worker:
+#                condition: service_healthy
+    mysql:
+        image: mysql:8.0
+        container_name: "${DOCKER_APP_SLUG}-mysql"
+        ports:
+            - "${DOCKER_MYSQL_PORT}:3306"
+        user: "${DOCKER_USER_ID}:${DOCKER_GROUP_ID}"
+        volumes:
+            - ./.docker/mysql/my.cnf:/etc/mysql/mysql.conf.d/mysqld.cnf
+            - db:/var/lib/mysql:delegated
+        command: --default-authentication-plugin=mysql_native_password
+        environment:
+            MYSQL_DATABASE: "${DB_DATABASE}"
+            MYSQL_USER: "${DB_USERNAME}"
+            MYSQL_ROOT_PASSWORD: "${DB_PASSWORD}"
+            MYSQL_PASSWORD: "${DB_PASSWORD}"
+        healthcheck:
+            test: [ "CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot" ]
+            interval: 3s
+            timeout: 5s
+            retries: 10
+            start_period: 3s
+        networks:
+            - backend-octane
+
+    redis:
+        image: redis:alpine
+        container_name: "${DOCKER_APP_SLUG}-redis"
+        ports:
+            - "${DOCKER_REDIS_PORT}:6379"
+        volumes:
+            - redis:/data
+            - ./.docker/redis/redis.conf:/usr/local/etc/redis/redis.conf
+        command: redis-server /usr/local/etc/redis/redis.conf
+        healthcheck:
+            test: [ "CMD", "redis-cli", "ping" ]
+            interval: 3s
+            timeout: 5s
+            retries: 10
+        networks:
+            - backend-octane
+
+    queue-worker:
+        build:
+            context: ./
+            dockerfile: .docker/php-swoole/Dockerfile
+            args:
+                - USER_DOCKER_ID=${DOCKER_USER_ID}
+                - GROUP_DOCKER_ID=${DOCKER_GROUP_ID}
+                - PROJECT_PATH=${DOCKER_CODE_FOLDER}
+        container_name: "${DOCKER_APP_SLUG}-queue"
+        volumes:
+            - ./:${DOCKER_CODE_FOLDER}:delegated
+            - ./.docker/php/php.ini:/usr/local/etc/php/php.ini
+        working_dir: ${DOCKER_CODE_FOLDER}
+        command: php artisan queue:work --sleep=3 --tries=3
+        depends_on:
+            - redis
+            - mysql
+        networks:
+            - backend-octane
+
+    memcached:
+        image: memcached:alpine
+        container_name: "${DOCKER_APP_SLUG}-memcached"
+        ports:
+            - "${DOCKER_MEMCACHED_PORT}:11211"
+        command: memcached -m 256 -c 1024 -v
+        networks:
+            - backend-octane
+
+
+networks:
+    backend-octane:
+        name: backend-octane
+        driver: bridge
+
+x-mutagen:
+    sync:
+        defaults:
+            mode: "two-way-resolved"
+            configurationBeta:
+                permissions:
+                    defaultFileMode: 0666
+                    defaultDirectoryMode: 0666
+                    defaultOwner: "id:${DOCKER_USER_ID}"
+                    defaultGroup: "id:${DOCKER_GROUP_ID}"
+            ignore:
+                vcs: true
+        code:
+            alpha: "./"
+            beta: "volume://code"
+            mode: "two-way-resolved"
+            configurationBeta:
+                permissions:
+                    defaultFileMode: 0666
+                    defaultDirectoryMode: 0777
+                    defaultOwner: "id:${DOCKER_USER_ID}"
+                    defaultGroup: "id:${DOCKER_GROUP_ID}"
+        db:
+            alpha: "./.docker/mysql/volumes"
+            beta: "volume://db"
+            mode: "two-way-resolved"
+            configurationBeta:
+                permissions:
+                    defaultFileMode: 0666
+                    defaultDirectoryMode: 0777
+                    defaultOwner: "id:${DOCKER_USER_ID}"
+                    defaultGroup: "id:${DOCKER_GROUP_ID}"
+        redis:
+            alpha: "./.docker/redis/data"
+            beta: "volume://redis"
+            mode: "two-way-resolved"
+            configurationBeta:
+                permissions:
+                    defaultFileMode: 0666
+                    defaultDirectoryMode: 0777
+                    defaultOwner: "id:${DOCKER_USER_ID}"
+                    defaultGroup: "id:${DOCKER_GROUP_ID}"

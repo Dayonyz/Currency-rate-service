@@ -4,7 +4,7 @@ return [
     /*
      * Determine if the response cache middleware should be enabled.
      */
-    'enabled' => env('RESPONSE_CACHE_ENABLED', true),
+    'enabled' => env('RESPONSE_CACHE_ENABLED', false),
 
     /*
      *  The given class will determinate if a request should be cached. The
@@ -28,7 +28,7 @@ return [
      * When using the default CacheRequestFilter this setting controls the
      * default number of seconds responses must be cached.
      */
-    'cache_lifetime_in_seconds' => (int) env('RESPONSE_CACHE_LIFETIME', 60 * 60 * 24),
+    'cache_lifetime_in_seconds' => (int) env('RESPONSE_CACHE_LIFETIME', 60 * 60),
 
     /*
      * This setting determines if a http header named with the cache time
@@ -62,7 +62,7 @@ return [
      * requests. This can be the name of any store that is
      * configured in app/config/cache.php
      */
-    'cache_store' => env('RESPONSE_CACHE_DRIVER', 'redis'),
+    'cache_store' => env('RESPONSE_CACHE_DRIVER', 'memcached'),
 
     /*
      * Here you may define replacers that dynamically replace content from the response.

@@ -10,7 +10,8 @@
         "fakerphp/faker": "^1.24",
         "laravel/framework": "^11.31",
         "laravel/octane": "^2.12",
-        "laravel/sanctum": "^4.0"
+        "laravel/sanctum": "^4.0",
+        "spatie/laravel-responsecache": "^7.7"
     },
     "require-dev": {
         "laravel/pail": "^1.1",

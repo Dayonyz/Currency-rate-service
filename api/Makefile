@@ -1,11 +1,14 @@
 serviceList=php nginx mysql redis queue-worker
-octaneServiceList=php-worker nginx mysql redis queue-worker
+octaneServiceList=php-worker mysql redis queue-worker
 sshContainer=php
-
+sshOctaneContainer=php-worker
 mysqlContainer=mysql
 
 build: ## Builds Docker file
 	docker-compose build --no-cache $(sshContainer)
+
+build-octane: ## Builds Docker file
+	docker-compose -f docker-compose.octane.yml build --no-cache $(sshOctaneContainer)
 
 set-app-slug: ## Converts APP_NAME to DOCKER_APP_SLUG
 	@APP_NAME=$$(grep '^APP_NAME=' .env | cut -d '=' -f2-); \
@@ -95,6 +98,21 @@ set-redis-port: ## Sets the first free port starting from 6380 to .env as DOCKER
 	sed -i.bak -e "s/^DOCKER_REDIS_PORT=.*/DOCKER_REDIS_PORT=$$PORT/" .env && rm -f .env.bak; \
 	echo "DOCKER_REDIS_PORT set into .env"
 
+set-memcached-port: ## Sets the first free port starting from 11211 to .env as DOCKER_MEMCACHED_PORT
+	@PLATFORM=$$(uname); \
+	PORT=11211; \
+	while true; do \
+		if [ "$$PLATFORM" = "Darwin" ]; then \
+			if ! lsof -iTCP:$$PORT -sTCP:LISTEN >/dev/null 2>&1; then break; fi; \
+		else \
+			if ! ss -tuln | grep -q ":$$PORT "; then break; fi; \
+		fi; \
+		PORT=$$((PORT + 1)); \
+	done; \
+	echo "Free Memcached port: $$PORT"; \
+	sed -i.bak -e "s/^DOCKER_MEMCACHED_PORT=.*/DOCKER_MEMCACHED_PORT=$$PORT/" .env && rm -f .env.bak; \
+	echo "DOCKER_MEMCACHED_PORT set into .env"
+
 set-xdebug-port: ## Sets the first free port starting from 9001 to .env as DOCKER_XDEBUG_PORT
 	@PLATFORM=$$(uname); \
 	PORT=9001; \
@@ -165,11 +183,11 @@ generate-env: ## Creates .env from .env.example
 	@make set-docker-remote-host
 	@make set-app-url
 
-install: ## Install for dev work
-	@make stop && \
+install: ## Install Laravel for dev work
+	@make stop
 	rm -rf .docker/mysql/volumes/*
 	rm -rf .docker/redis/data/*
-	@make start && \
+	@make start
 	docker-compose exec $(sshContainer) bash -c "\
 		composer install --optimize-autoloader --no-dev && \
 		php artisan key:generate && \
@@ -184,11 +202,40 @@ install: ## Install for dev work
 		php artisan app:fetch-currency-rates-since --currency=EUR --base=USD --M=01 --Y=2024 && \
 		php artisan app:generate-stress-test-files"
 
+install-octane: ## Install Laravel with octane for dev work
+	docker rm -f api-php-worker-1 api-php-worker-2 api-php-worker-3 api-php-worker-4
+	@make stop-octane
+	@sleep 3
+	rm -rf .docker/mysql/volumes/*
+	rm -rf .docker/redis/data/*
+	@make start-octane
+	@sleep 6
+	mutagen-compose -f docker-compose.octane.yml exec $(sshOctaneContainer) bash -c "\
+        composer install --optimize-autoloader --no-dev && \
+        php artisan key:generate && \
+        php artisan optimize:clear && \
+        php artisan config:clear && \
+        php artisan route:clear && \
+        php artisan view:clear && \
+        php artisan config:cache && \
+        php artisan route:cache && \
+        php artisan view:cache && \
+        php artisan migrate:fresh --seed && \
+        php artisan queue:flush && \
+        php artisan app:fetch-currency-rates-since --currency=EUR --base=USD --M=01 --Y=2024 && \
+        php artisan app:generate-stress-test-files"
+
 kill: ## Stops all docker containers
 	docker stop $(shell docker ps -aq)
 
 start: ## Starts docker-compose
 	docker-compose up -d $(serviceList)
+
+start-octane:
+	mutagen-compose -f docker-compose.octane.yml up -d $(octaneServiceList)
+
+stop-octane:
+	mutagen-compose down --volumes
 
 stop: ## Stops docker-compose
 	docker-compose down
@@ -196,8 +243,14 @@ stop: ## Stops docker-compose
 restart: ## Stops docker-compose and starts docker-compose
 	make stop && make start
 
+restart-octane: ## Stops docker-compose and starts docker-compose
+	make stop-octane && make start-octane
+
 ssh: ## SSH to docker-compose
 	docker-compose exec $(sshContainer) bash
+
+ssh-octane: ## SSH to docker-compose
+	mutagen-compose -f docker-compose.octane.yml exec $(sshOctaneContainer) bash
 
 db-create: ## Create MySQL database
 	DB_PASSWORD=$$(grep '^DB_PASSWORD=' .env | cut -d '=' -f2); \

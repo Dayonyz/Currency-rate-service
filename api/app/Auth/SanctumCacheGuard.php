@@ -44,7 +44,7 @@ class SanctumCacheGuard extends Guard
                 return null;
             }
 
-            $tokenable = $accessToken->tokenable->withAccessToken(
+            $tokenAble = $accessToken->tokenable->withAccessToken(
                 $accessToken
             );
 
@@ -52,7 +52,7 @@ class SanctumCacheGuard extends Guard
 
             TokenUpdateLastUsedAtJob::dispatch($accessToken, now()->toDateTimeString());
 
-            return $tokenable;
+            return $tokenAble;
         }
 
         return null;

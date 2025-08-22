@@ -1,4 +1,5 @@
-# Currency Rates Service -  application for fetching currency rates and viewing them via UI, optimized for high load
+# Currency Rates Service -  application for fetching currency rates and viewing them via UI, optimized for high load.
+## Goal 1500 RPS (from unique user), HTTP request duration ~ 1000ms
 
 ## Backend Deploy
 
@@ -111,9 +112,7 @@ running (7m00.0s), 000/800 VUs, 84668 complete and 0 interrupted iterations
 default ✓ [======================================] 000/800 VUs  7m0s
 ```
 
-### Next application level is minimize Sql queries from Sanctum removing its tokens to a cache and creating horizontal scaling
-
-#### To be continued ;)
+### Next optimization level is minimize Sql queries from Sanctum removing its tokens to a cache and make horizontal scaling
 
 ### Conducted the next level optimization: 
  - Sanctum: Redis cache, asynchronous tokens updates, race elimination 
@@ -171,4 +170,224 @@ That is, the system handles the load without errors, but the increase in the num
 
 RPS does not grow, but is stable, so the system is scalable, but does not accelerate further on one instance.
 
+There are no reason to make horizontal scale with Nginx balancer on one instance (Macbook M1) - because we reached max 8 CPU limit with 1000 VUs, pm.max_children = 200 for Php-fpm and macOS uses the virtualization but not the containerization
 
+### Next optimization level is switch to Laravel Octane (swoole server)
+
+And next record 874 RPS with APCu cache with Laravel Octane (swoole server), but it's wrong way after detail review of cache state because APCu in not shared cache between Octane workers instances
+```
+█ THRESHOLDS
+
+    http_req_duration
+    ✓ 'p(90)<3000' p(90)=1.19s
+
+
+█ TOTAL RESULTS
+
+    checks_total.......: 367316  874.552963/s
+    checks_succeeded...: 100.00% 367316 out of 367316
+    checks_failed......: 0.00%   0 out of 367316
+
+    ✓ status is 200
+
+    HTTP
+    http_req_duration..............: avg=980.83ms min=3.37ms  med=1.06s max=1.78s p(90)=1.19s p(95)=1.52s
+      { expected_response:true }...: avg=980.83ms min=3.37ms  med=1.06s max=1.78s p(90)=1.19s p(95)=1.52s
+    http_req_failed................: 0.00%  0 out of 367316
+    http_reqs......................: 367316 874.552963/s
+
+    EXECUTION
+    iteration_duration.............: avg=3.93s    min=25.78ms med=4.33s max=6.17s p(90)=4.86s p(95)=4.96s
+    iterations.....................: 91829  218.638241/s
+    vus............................: 2      min=2           max=1000
+    vus_max........................: 1000   min=1000        max=1000
+
+    NETWORK
+    data_received..................: 1.5 GB 3.6 MB/s
+    data_sent......................: 74 MB  175 kB/s
+
+
+
+
+running (7m00.0s), 0000/1000 VUs, 91829 complete and 0 interrupted iterations
+default ✓ [======================================] 0000/1000 VUs  7m0s
+```
+
+So APCu replaced by Memcached shared cache (Laravel Octane swoole), and we have next record 929 RPS
+
+```
+█ THRESHOLDS
+
+    http_req_duration
+    ✓ 'p(90)<3000' p(90)=1.13s
+
+
+█ TOTAL RESULTS
+
+    checks_total.......: 390220  929.050838/s
+    checks_succeeded...: 100.00% 390220 out of 390220
+    checks_failed......: 0.00%   0 out of 390220
+
+    ✓ status is 200
+
+    HTTP
+    http_req_duration..............: avg=922.91ms min=2.88ms  med=1.01s max=1.66s p(90)=1.13s p(95)=1.42s
+      { expected_response:true }...: avg=922.91ms min=2.88ms  med=1.01s max=1.66s p(90)=1.13s p(95)=1.42s
+    http_req_failed................: 0.00%  0 out of 390220
+    http_reqs......................: 390220 929.050838/s
+
+    EXECUTION
+    iteration_duration.............: avg=3.7s     min=23.57ms med=4.12s max=5.8s  p(90)=4.59s p(95)=4.67s
+    iterations.....................: 97555  232.26271/s
+    vus............................: 1      min=1           max=1000
+    vus_max........................: 1000   min=1000        max=1000
+
+    NETWORK
+    data_received..................: 1.6 GB 3.8 MB/s
+    data_sent......................: 78 MB  186 kB/s
+
+
+
+
+running (7m00.0s), 0000/1000 VUs, 97555 complete and 0 interrupted iterations
+default ✓ [======================================] 0000/1000 VUs  7m0s
+```
+
+- Up to 1500VUs with same configuration - Conclusions - only 4.5 from 8 CPU used, nginx balancer on 2-3-4 instances had no effect, even worse than expected
+- Raised octane workers manually to command: php artisan octane:start --server=swoole --host=0.0.0.0 --port=${DOCKER_OCTANE_PORT} --workers=12 --task-workers=4 --max-requests=2000
+- Next record - is 941 RPS but avg request duration is 1.64s
+- Any other tunes had no effect, and then I decided to turn off nginx
+```
+█ THRESHOLDS
+
+    http_req_duration
+    ✓ 'p(90)<3000' p(90)=1.64s
+
+
+█ TOTAL RESULTS
+
+    checks_total.......: 395488  941.626007/s
+    checks_succeeded...: 100.00% 395488 out of 395488
+    checks_failed......: 0.00%   0 out of 395488
+
+    ✓ status is 200
+
+    HTTP
+    http_req_duration..............: avg=1.36s min=2.86ms  med=1.53s max=2.28s p(90)=1.64s p(95)=1.89s
+      { expected_response:true }...: avg=1.36s min=2.86ms  med=1.53s max=2.28s p(90)=1.64s p(95)=1.89s
+    http_req_failed................: 0.00%  0 out of 395488
+    http_reqs......................: 395488 941.626007/s
+
+    EXECUTION
+    iteration_duration.............: avg=5.48s min=22.57ms med=6.2s  max=7.73s p(90)=6.66s p(95)=6.75s
+    iterations.....................: 98872  235.406502/s
+    vus............................: 3      min=3           max=1500
+    vus_max........................: 1500   min=1500        max=1500
+
+    NETWORK
+    data_received..................: 1.6 GB 3.9 MB/s
+    data_sent......................: 79 MB  189 kB/s
+
+
+
+
+running (7m00.0s), 0000/1500 VUs, 98872 complete and 0 interrupted iterations
+default ✓ [======================================] 0000/1500 VUs  7m0s
+```
+
+```
+*******@MacBook-Pro-**** currency-rate % docker stats --no-stream
+CONTAINER ID   NAME                                   CPU %     MEM USAGE / LIMIT     MEM %     NET I/O           BLOCK I/O     PIDS
+6d2f71f9a383   currency-rates-fetching-nginx-octane   45.66%    251.1MiB / 13.65GiB   1.80%     1.5GB / 1.55GB    0B / 36.5MB   9
+17b614dc1e86   currency-rates-fetching-queue          69.05%    32.59MiB / 13.65GiB   0.23%     618MB / 499MB     0B / 0B       1
+2ee9e9f86613   api-php-worker-1                       314.01%   336.5MiB / 13.65GiB   2.41%     1.91GB / 2.12GB   0B / 4.1kB    25
+13f9921ec37b   currency-rates-fetching-redis          36.56%    149.2MiB / 13.65GiB   1.07%     1.08GB / 1.65GB   0B / 0B       7
+1eb8cc77a760   currency-rates-fetching-mysql          15.44%    381.4MiB / 13.65GiB   2.73%     53.1MB / 389MB    0B / 483kB    47
+db21e55401a9   currency-rates-fetching-memcached      13.09%    9.137MiB / 13.65GiB   0.07%     171MB / 603MB     0B / 0B       10
+```
+
+Results without nginx with one Laravel Octane worker - next achievement 1116 RPS, 1.39s avg request duration, not bad, but we can better
+
+```
+█ THRESHOLDS
+
+    http_req_duration
+    ✓ 'p(90)<3000' p(90)=1.39s
+
+
+█ TOTAL RESULTS
+
+    checks_total.......: 468760  1116.063279/s
+    checks_succeeded...: 100.00% 468760 out of 468760
+    checks_failed......: 0.00%   0 out of 468760
+
+    ✓ status is 200
+
+    HTTP
+    http_req_duration..............: avg=1.15s min=2.96ms  med=1.28s max=2.13s p(90)=1.39s p(95)=1.74s
+      { expected_response:true }...: avg=1.15s min=2.96ms  med=1.28s max=2.13s p(90)=1.39s p(95)=1.74s
+    http_req_failed................: 0.00%  0 out of 468760
+    http_reqs......................: 468760 1116.063279/s
+
+    EXECUTION
+    iteration_duration.............: avg=4.62s min=23.39ms med=5.2s  max=6.18s p(90)=5.73s p(95)=5.79s
+    iterations.....................: 117190 279.01582/s
+    vus............................: 3      min=3           max=1500
+    vus_max........................: 1500   min=1500        max=1500
+
+    NETWORK
+    data_received..................: 1.9 GB 4.6 MB/s
+    data_sent......................: 94 MB  224 kB/s
+
+
+
+
+running (7m00.0s), 0000/1500 VUs, 117190 complete and 0 interrupted iterations
+default ✓ [======================================] 0000/1500 VUs  7m0s
+```
+
+After several sleepless nights and attempts to scale to several octane instances on lightweight HAProxy, I hit the ceiling - 1000 RPS 1.6 s http response and no more. I realized that I forgot something important. And yes, I forgot. This is a MacBook and this is a local machine, not balancing between several servers. So my answer was... x-mutagen and disabling any proxies and balancers. I hope you read this far :)
+
+**🔥 And here is the long-awaited result and our goal: 2076 RPS, 936 ms http_req_duration 🔥**
+
+```
+ █ THRESHOLDS 
+
+    http_req_duration
+    ✓ 'p(90)<3000' p(90)=936.92ms
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 872232  2076.398017/s
+    checks_succeeded...: 100.00% 872232 out of 872232
+    checks_failed......: 0.00%   0 out of 872232
+
+    ✓ status is 200
+
+    HTTP
+    http_req_duration..............: avg=742.26ms min=2.35ms  med=826.55ms max=1.23s p(90)=936.92ms p(95)=971.12ms
+      { expected_response:true }...: avg=742.26ms min=2.35ms  med=826.55ms max=1.23s p(90)=936.92ms p(95)=971.12ms
+    http_req_failed................: 0.00%  0 out of 872232
+    http_reqs......................: 872232 2076.398017/s
+
+    EXECUTION
+    iteration_duration.............: avg=2.97s    min=20.99ms med=3.37s    max=4.24s p(90)=3.62s    p(95)=3.7s    
+    iterations.....................: 218058 519.099504/s
+    vus............................: 5      min=5           max=1800
+    vus_max........................: 1800   min=1800        max=1800
+
+    NETWORK
+    data_received..................: 3.6 GB 8.6 MB/s
+    data_sent......................: 175 MB 417 kB/s
+
+
+
+
+running (7m00.1s), 0000/1800 VUs, 218058 complete and 0 interrupted iterations
+default ✓ [======================================] 0000/1800 VUs  7m0s
+```
+
+#### What is x-mutagen - you will find in the documentation, but that is a completely different story. 
+
+Happy end, my friends 🎉🎉🎉  🏆🏆🏆

@@ -1,10 +1,6 @@
 <?php
 
-use App\Enums\CurrenciesEnum;
 use App\Http\Controllers\AuthController;
-use App\Repositories\EloquentCurrencyRatesRepository;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CurrencyRatesController;
 
@@ -27,7 +23,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('logout', [AuthController::class, 'logout']);
 });
 
-Route::get('/cache', function () {
+Route::get('/apc-test', function () {
     $info = apcu_cache_info(true);
     $mem = apcu_sma_info(true);
 

@@ -40,6 +40,15 @@ return [
 
     'server' => env('OCTANE_SERVER', 'roadrunner'),
 
+    'swoole' => [
+        'options' => [
+            'package_max_length' => 10 * 1024 * 1024,
+            'open_tcp_nodelay' => true,
+            'tcp_defer_accept' => true,
+            'enable_coroutine' => true,
+        ],
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Force HTTPS
@@ -168,8 +177,8 @@ return [
     */
 
     'cache' => [
-        'rows' => 1000,
-        'bytes' => 10000,
+        'rows' => 2000,
+        'bytes' => 5000,
     ],
 
     /*
@@ -206,7 +215,7 @@ return [
     |
     */
 
-    'garbage' => 50,
+    'garbage' => 100,
 
     /*
     |--------------------------------------------------------------------------
