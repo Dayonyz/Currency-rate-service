@@ -30,7 +30,7 @@ class MemcachedStatsCommand extends Command
         $stats = $mem->getStats();
 
         if ($stats === false) {
-            $this->error("Не удалось подключиться к Memcached");
+            $this->error("Connection to memcached failed");
             return Command::FAILURE;
         }
 
