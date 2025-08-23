@@ -28,11 +28,15 @@ class CurrencyRatesOpenExchange implements CurrencyRates
         DateTime    $date
     ): CurrencyRateDto
     {
+        $params = [
+            'app_id' => $this->key,
+            'base' => $baseCurrency->name,
+            'symbols' => $currency->name
+        ];
+
         $url = "{$this->endpoint}/historical/" .
-               "{$date->format('Y-m-d')}.json" .
-               "?app_id={$this->key}&" .
-               "base={$baseCurrency->name}&" .
-               "symbols={$currency->name}";
+               "{$date->format('Y-m-d')}.json?" .
+               http_build_query($params);
 
         $response = $this->request($url);
 
@@ -67,6 +71,7 @@ class CurrencyRatesOpenExchange implements CurrencyRates
 
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
         if ($response === false) {
             $error = curl_error($ch);
             curl_close($ch);
