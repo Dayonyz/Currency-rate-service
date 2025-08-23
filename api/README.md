@@ -1,5 +1,5 @@
 # Currency Rates Service -  application for fetching currency rates and viewing them via UI, optimized for high load.
-## Goal 1500 RPS (from unique user), HTTP request duration ~ 1000ms
+## Goal 1500 RPS (from unique user), HTTP request duration ~ 1000ms, 1800-2000 VUs load
 
 ## Backend Deploy
 
