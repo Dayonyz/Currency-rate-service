@@ -34,7 +34,7 @@ k6 run load_test.js
 
 ### Macbook Pro M1 RAM 16Gb environment, Docker - 14 Gb Ram, 8 CPU, no Swap
 ### The final results that could be achieved with A/B tests was: 
-- 838 RPS for Redis cache 
+- 838 RPS for Redis cache, HTTP request duration - 1.02s, 800 VUs (virtual users per second) load 
 ```
    █ THRESHOLDS 
 
@@ -73,7 +73,7 @@ running (7m00.0s), 000/800 VUs, 88021 complete and 0 interrupted iterations
 default ✓ [======================================] 000/800 VUs  7m0s
 
 ```
-- 806 RPS for Apc cache
+- 806 RPS for Apc cache, HTTP request duration - 1.07s, 800 VUs load
 ```
    █ THRESHOLDS 
 
@@ -160,8 +160,8 @@ default ✓ [======================================] 0000/1000 VUs  7m0s
 ```
 
 - RPS ≈ 780 is stable at 1000 VU and at the same time no fails (0% http_req_failed)
-
 - Latency p90 = 1.4s - means the system can handle the load, but has a limitation.
+- 1000 VUs load
 
 ### Conclusions
 
@@ -174,7 +174,8 @@ There are no reason to make horizontal scale with Nginx balancer on one instance
 
 ### Next optimization level is switch to Laravel Octane (swoole server)
 
-And next record 874 RPS with APCu cache with Laravel Octane (swoole server), but it's wrong way after detail review of cache state because APCu in not shared cache between Octane workers instances
+- And next record 874 RPS with APCu cache with Laravel Octane (swoole server), but it's wrong way after detail review of cache state because APCu in not shared cache between Octane workers instances
+- HTTP request duration - 1.19s, 1000 VUs load
 ```
 █ THRESHOLDS
 
@@ -213,7 +214,8 @@ running (7m00.0s), 0000/1000 VUs, 91829 complete and 0 interrupted iterations
 default ✓ [======================================] 0000/1000 VUs  7m0s
 ```
 
-So APCu replaced by Memcached shared cache (Laravel Octane swoole), and we have next record 929 RPS
+So APCu replaced by Memcached shared cache (Laravel Octane swoole), and we have next record: 
+929 RPS, HTTP request duration - 1.13s, 1000 VUs load
 
 ```
 █ THRESHOLDS
@@ -255,7 +257,7 @@ default ✓ [======================================] 0000/1000 VUs  7m0s
 
 - Up to 1500VUs with same configuration - Conclusions - only 4.5 from 8 CPU used, nginx balancer on 2-3-4 instances had no effect, even worse than expected
 - Raised octane workers manually to command: php artisan octane:start --server=swoole --host=0.0.0.0 --port=${DOCKER_OCTANE_PORT} --workers=12 --task-workers=4 --max-requests=2000
-- Next record - is 941 RPS but avg request duration is 1.64s
+- Next record - is 941 RPS but avg HTTP request duration - 1.64s, 1500 VUs load
 - Any other tunes had no effect, and then I decided to turn off nginx
 ```
 █ THRESHOLDS
@@ -306,7 +308,8 @@ CONTAINER ID   NAME                                   CPU %     MEM USAGE / LIMI
 db21e55401a9   currency-rates-fetching-memcached      13.09%    9.137MiB / 13.65GiB   0.07%     171MB / 603MB     0B / 0B       10
 ```
 
-Results without nginx with one Laravel Octane worker - next achievement 1116 RPS, 1.39s avg request duration, not bad, but we can better
+Results without nginx with one Laravel Octane worker - next achievement: 
+1116 RPS, HTTP request duration - 1.39s, 1500 VUs load -  not bad, but we can better
 
 ```
 █ THRESHOLDS
@@ -348,7 +351,7 @@ default ✓ [======================================] 0000/1500 VUs  7m0s
 
 After several sleepless nights and attempts to scale to several octane instances on lightweight HAProxy, I hit the ceiling - 1000 RPS 1.6 s http response and no more. I realized that I forgot something important. And yes, I did. This is a MacBook M1 and this is a local machine, Docker and not balancing between several servers. So my answer was... x-mutagen and disabling any proxies and balancers. I hope you read this far :)
 
-**🔥 And here is the long-awaited result and our goal: 2076 RPS, 936 ms http_req_duration 🔥**
+**🔥 And here is the long-awaited result and our goal: 2076 RPS, HTTP request duration - 936ms, 1800 VUs load 🔥**
 
 ```
  █ THRESHOLDS 
