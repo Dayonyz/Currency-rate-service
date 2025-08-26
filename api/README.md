@@ -33,7 +33,7 @@ k6 run load_test.js
 ```
 
 ### Macbook Pro M1 RAM 16Gb environment, Docker - 14 Gb RAM, 8 CPU, Swap 512 Mb
-### The final results that could be achieved with A/B tests was: 
+### The final results with current configuration that could be achieved with A/B tests was: 
 - 838 RPS for Redis cache, HTTP request duration - 1.02s, 800 VUs (virtual users per second) load 
 ```
    █ THRESHOLDS 
