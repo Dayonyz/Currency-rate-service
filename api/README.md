@@ -394,3 +394,49 @@ default ✓ [======================================] 0000/1800 VUs  7m0s
 #### What is x-mutagen - you will find in the documentation, but that is a completely different story. 
 
 Happy end, my friends 🎉🎉🎉  🏆🏆🏆
+
+P.S.
+
+And here is my last experiment with enabled spatie/laravel-responsecache package using memcached driver:
+
+**🔥 2464 RPS, avg HTTP request duration - 778ms, 1800 VUs load 🔥**
+
+```
+ █ THRESHOLDS 
+
+    http_req_duration
+    ✓ 'p(90)<3000' p(90)=778.72ms
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 1035196 2464.596272/s
+    checks_succeeded...: 100.00% 1035196 out of 1035196
+    checks_failed......: 0.00%   0 out of 1035196
+
+    ✓ status is 200
+
+    HTTP
+    http_req_duration..............: avg=624.69ms min=1.98ms  med=694.7ms max=1.46s p(90)=778.72ms p(95)=808.36ms
+      { expected_response:true }...: avg=624.69ms min=1.98ms  med=694.7ms max=1.46s p(90)=778.72ms p(95)=808.36ms
+    http_req_failed................: 0.00%   0 out of 1035196
+    http_reqs......................: 1035196 2464.596272/s
+
+    EXECUTION
+    iteration_duration.............: avg=2.5s     min=19.65ms med=2.82s   max=4.17s p(90)=3.05s    p(95)=3.17s   
+    iterations.....................: 258799  616.149068/s
+    vus............................: 4       min=4            max=1800
+    vus_max........................: 1800    min=1800         max=1800
+
+    NETWORK
+    data_received..................: 4.1 GB  9.8 MB/s
+    data_sent......................: 208 MB  495 kB/s
+
+
+
+
+running (7m00.0s), 0000/1800 VUs, 258799 complete and 0 interrupted iterations
+default ✓ [======================================] 0000/1800 VUs  7m0s
+```
+
+Impossible mission - completed 😎
