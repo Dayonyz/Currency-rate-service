@@ -18,7 +18,7 @@ class EloquentCurrencyRatesRepository implements CurrencyRatesRepository
     private int $limit;
     private ?CacheInterface $cache;
 
-    public function __construct(? CacheInterface $cache)
+    public function __construct(?CacheInterface $cache)
     {
         $this->limit = min(config('repository.eloquent.limits'));
 
