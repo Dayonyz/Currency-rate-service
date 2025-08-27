@@ -6,6 +6,7 @@ use App\Dto\CurrencyRateDto;
 use App\Enums\CurrenciesEnum;
 use App\Http\Resources\CurrencyRateResource;
 use App\Models\Rate;
+use App\Models\RatePageMarker;
 use App\Repositories\Contracts\CurrencyRatesRepository;
 use ErrorException;
 use Exception;
@@ -86,10 +87,39 @@ class EloquentCurrencyRatesRepository implements CurrencyRatesRepository
         CurrenciesEnum $currency,
         CurrenciesEnum $baseCurrency,
         ?int           $limit = null,
-        ?int           $offset = null
+        ?int           $offset = null,
+        ?int           $page = null
     ): array {
         $query = Rate::byPairIso($currency ,$baseCurrency)
             ->orderBy('actual_at','desc');
+
+        if(! is_null($limit) && ! is_null($page)) {
+            if ($this->cache) {
+                $cacheKey = "{$currency->name}_{$baseCurrency->name}:page_marker_{$limit}_{$page}";
+
+                $pageMarkerId = $this->cache->remember($cacheKey, 60*60,
+                    function () use ($currency, $baseCurrency, $limit, $page) {
+                        return RatePageMarker::query()
+                            ->where('currency_iso', $currency->value)
+                            ->where('base_currency_iso', $baseCurrency->value)
+                            ->where('limit', $limit)
+                            ->where('page', $page)
+                            ->first()?->since_rate_id;
+                });
+            } else {
+                $pageMarkerId = RatePageMarker::query()
+                    ->where('currency_iso', $currency->value)
+                    ->where('base_currency_iso', $baseCurrency->value)
+                    ->where('limit', $limit)
+                    ->where('page', $page)
+                    ->first()?->since_rate_id;
+            }
+
+
+            if ($pageMarkerId) {
+                $query->where('id', '>=', $pageMarkerId);
+            }
+        }
 
         $query->limit($this->normalizeLimit($limit));
 
