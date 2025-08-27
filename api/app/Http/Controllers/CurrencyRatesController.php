@@ -46,7 +46,8 @@ class CurrencyRatesController extends Controller
             $currency,
             $baseCurrency,
             $perPage,
-            ($page - 1)*$perPage
+            ($page - 1)*$perPage,
+            $page
         );
 
         return response()->json([
