@@ -67,6 +67,7 @@ class PersonalAccessToken extends BaseToken
         static::deleting(function ($model) {
             if (config('sanctum.cache')) {
                 Cache::driver(config('sanctum.cache'))->delete('sanctum_auth:' . $model->key);
+                Cache::driver(config('sanctum.cache'))->delete('sanctum_auth_version:' . $model->key);
             }
         });
     }

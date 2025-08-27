@@ -50,7 +50,7 @@ class CurrencyRatesController extends Controller
         );
 
         return response()->json([
-            'success' => true,
+            'success' => ! empty($rates),
             'data' => [
                 'rates' => $rates,
                 'page' => $page,
@@ -65,7 +65,7 @@ class CurrencyRatesController extends Controller
         $rate = $this->currencyRateRepository->getLatestRate($currency, $baseCurrency);
 
         return response()->json([
-            'success' => (bool)$rate,
+            'success' => (bool) $rate,
             'data' => $rate,
         ], Response::HTTP_OK);
     }
