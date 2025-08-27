@@ -11,6 +11,9 @@ return [
         )), function (&$array) {
             sort($array);
         }),
-        'cache' => env('REPOSITORY_CACHE_DRIVER', 'redis')
+        'cache' => [
+            'driver' => env('REPOSITORY_CACHE_DRIVER', 'redis'),
+            'ttl' => env('REPOSITORY_CACHE_TTL', 24*60*60),
+        ],
     ],
 ];

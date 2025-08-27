@@ -3,13 +3,11 @@
 namespace App\Models;
 
 use App\Enums\CurrenciesEnum;
-use App\Repositories\Contracts\CurrencyRatesRepository;
 use App\Repositories\EloquentCurrencyRatesRepository;
 use App\Services\PageMarkerService;
-use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 
 class Rate extends Model
 {
@@ -23,34 +21,26 @@ class Rate extends Model
         parent::boot();
 
         static::created(function ($model) {
-            $createdMarkerIds = [];
-            /**
-             * @throws Exception
-             */
-            try {
+            $cacheDriver = config('repository.eloquent.cache.driver');
+
+            if ($cacheDriver) {
                 $repository = new EloquentCurrencyRatesRepository(null);
 
                 $index = $repository->getRatesTotalCount($model->currency_iso, $model->base_currency_iso);
-                $pages = PageMarkerService::getPagesByLimits($index, config('repository.eloquent.limits'));
+                $pages = PageMarkerService::getPageByLimits($index, config('repository.eloquent.limits'));
 
                 foreach ($pages as $limit => $page) {
                     if (PageMarkerService::isFirstItemOnPage($index, $limit, $page)) {
-                        $createdMarkerIds[] = RatePageMarker::create([
-                            'currency_iso' => $model->currency_iso->value,
-                            'base_currency_iso' => $model->base_currency_iso->value,
-                            'limit' => $limit,
-                            'page' => $page,
-                            'since_rate_id' => $model->id,
-                        ])?->id;
+                        $cacheKey = "{$model->currency_iso->name}_{$model->base_currency_iso->name}:" .
+                            "page_marker_{$limit}_{$page}";
+
+                        Cache::driver(config('repository.eloquent.cache.driver'))->remember(
+                            $cacheKey,
+                            config('repository.eloquent.cache.ttl'),
+                            fn() => $model->id
+                        );
                     }
                 }
-            } catch (Exception $exception) {
-                DB::transaction(function() use ($model, $createdMarkerIds) {
-                    $model->delete();
-                    RatePageMarker::query()->whereIn('id', $createdMarkerIds)->delete();
-                });
-
-                throw $exception;
             }
         });
     }

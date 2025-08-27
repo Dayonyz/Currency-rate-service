@@ -6,7 +6,7 @@ use InvalidArgumentException;
 
 class PageMarkerService
 {
-    public static function getPagesByLimits(int $index, array $limits): array
+    public static function getPageByLimits(int $index, array $limits): array
     {
         $limits = array_unique(array_filter($limits, fn($item) => is_int($item)));
 

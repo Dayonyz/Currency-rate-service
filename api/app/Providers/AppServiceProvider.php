@@ -19,7 +19,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(CurrencyRates::class, CurrencyRatesOpenExchange::class);
 
         $this->app->singleton(CurrencyRatesRepository::class, function () {
-            $repoCacheDriver = config('repository.eloquent.cache');
+            $repoCacheDriver = config('repository.eloquent.cache.driver');
 
             return new EloquentCurrencyRatesRepository(
                 !$repoCacheDriver ? null : Cache::driver($repoCacheDriver)

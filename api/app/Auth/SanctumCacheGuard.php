@@ -40,11 +40,8 @@ class SanctumCacheGuard extends Guard
 
             $accessToken = $model::findToken($token);
 
-            Log::info($accessToken);
-
             if (! $this->isValidAccessToken($accessToken) ||
                 ! $this->supportsTokens($accessToken->tokenable)) {
-                Log::info($accessToken);
                 return null;
             }
 

@@ -20,7 +20,7 @@ return new class extends Migration
             $table->timestamp('actual_at');
             $table->timestamp('created_at');
 
-            $table->unique(['currency_iso', 'base_currency_iso', 'actual_at'], 'rates_currency_base_actual_at_idx');
+            $table->index(['currency_iso', 'base_currency_iso', 'actual_at', 'id'], 'rates_pair_actual_id_idx');
         });
     }
 

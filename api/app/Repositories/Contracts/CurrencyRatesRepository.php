@@ -17,7 +17,6 @@ interface CurrencyRatesRepository
         CurrenciesEnum $currency,
         CurrenciesEnum $baseCurrency,
         ?int           $limit = null,
-        ?int           $offset = null,
         ?int           $page = null
     );
 

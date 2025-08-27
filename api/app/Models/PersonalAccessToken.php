@@ -127,10 +127,6 @@ class PersonalAccessToken extends BaseToken
 
                 $instance = $getValidInstance();
 
-                Log::info(111);
-                Log::info($instance);
-                Log::info(222);
-
                 if ($instance) {
                     $version = (int)(microtime(true) * 1000000);
 
