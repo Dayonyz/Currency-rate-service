@@ -6,6 +6,7 @@ use App\Jobs\TokenUpdateLastUsedAtJob;
 use Illuminate\Contracts\Auth\Factory as AuthFactory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Log;
 use Laravel\Sanctum\Events\TokenAuthenticated;
 use Laravel\Sanctum\Guard;
 use Laravel\Sanctum\Sanctum;
@@ -39,8 +40,11 @@ class SanctumCacheGuard extends Guard
 
             $accessToken = $model::findToken($token);
 
+            Log::info($accessToken);
+
             if (! $this->isValidAccessToken($accessToken) ||
                 ! $this->supportsTokens($accessToken->tokenable)) {
+                Log::info($accessToken);
                 return null;
             }
 

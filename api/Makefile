@@ -1,5 +1,6 @@
 serviceList=php nginx mysql redis queue-worker
 octaneServiceList=php-worker mysql redis queue-worker
+preInstallOctaneServiceList=php mysql redis queue-worker
 sshContainer=php
 sshOctaneContainer=php-worker
 mysqlContainer=mysql
@@ -8,7 +9,7 @@ build: ## Builds Docker file
 	docker-compose build --no-cache $(sshContainer)
 
 build-octane: ## Builds Docker file
-	docker-compose -f docker-compose.octane.yml build --no-cache $(sshOctaneContainer)
+	mutagen-compose -f docker-compose.octane.yml build --no-cache --pull
 
 set-app-slug: ## Converts APP_NAME to DOCKER_APP_SLUG
 	@APP_NAME=$$(grep '^APP_NAME=' .env | cut -d '=' -f2-); \
@@ -208,22 +209,24 @@ install-octane: ## Install Laravel with octane for dev work
 	@sleep 3
 	rm -rf .docker/mysql/volumes/*
 	rm -rf .docker/redis/data/*
-	@make start-octane
-	@sleep 6
-	mutagen-compose -f docker-compose.octane.yml exec $(sshOctaneContainer) bash -c "\
+	@sleep 3
+	mutagen-compose -f docker-compose.octane.yml up -d $(preInstallOctaneServiceList)
+	mutagen-compose -f docker-compose.octane.yml run --rm $(sshContainer) bash -c "\
         composer install --optimize-autoloader --no-dev && \
         php artisan key:generate && \
         php artisan optimize:clear && \
         php artisan config:clear && \
         php artisan route:clear && \
         php artisan view:clear && \
-        php artisan config:cache && \
-        php artisan route:cache && \
-        php artisan view:cache && \
         php artisan migrate:fresh --seed && \
         php artisan queue:flush && \
         php artisan app:fetch-currency-rates-since --currency=EUR --base=USD --M=01 --Y=2024 && \
-        php artisan app:generate-stress-test-files"
+        php artisan app:generate-stress-test-files && \
+		php artisan config:cache && \
+		php artisan route:cache && \
+		php artisan view:cache"
+	mutagen-compose -f docker-compose.octane.yml rm -f $(sshContainer)
+	mutagen-compose -f docker-compose.octane.yml up -d $(sshOctaneContainer)
 
 kill: ## Stops all docker containers
 	docker stop $(shell docker ps -aq)

@@ -6,6 +6,29 @@ volumes:
     redis:
 
 services:
+    php:
+        build:
+            context: ./
+            dockerfile: .docker/php-swoole/Dockerfile
+            args:
+                - USER_DOCKER_ID=${DOCKER_USER_ID}
+                - GROUP_DOCKER_ID=${DOCKER_GROUP_ID}
+                - PROJECT_PATH=${DOCKER_CODE_FOLDER}
+        environment:
+            APP_ENV: production
+        volumes:
+            - ./.docker/php-swoole/php.ini:/usr/local/etc/php/php.ini
+            - code:${DOCKER_CODE_FOLDER}:delegated
+        working_dir: ${DOCKER_CODE_FOLDER}
+        depends_on:
+            mysql:
+                condition: service_healthy
+            redis:
+                condition: service_started
+            memcached:
+                condition: service_started
+        networks:
+            - backend-octane
     php-worker:
         build:
             context: ./
@@ -25,7 +48,7 @@ services:
             mysql:
                 condition: service_healthy
             redis:
-                condition: service_healthy
+                condition: service_started
             memcached:
                 condition: service_started
         ports:

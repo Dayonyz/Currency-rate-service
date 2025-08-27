@@ -71,14 +71,14 @@ class User extends Authenticatable
         if (config('sanctum.cache')) {
             $key = hash('sha256', $fullToken);
 
-            $tokenCacheKey = 'sanctum_auth:' . $key;
-            $tokenCacheValue = serialize($token);
-
             $userCacheKey = 'sanctum_auth_tokenable:' . $key;
             $userCacheValue = serialize($this);
 
             $token->key = $key;
             $token->save();
+
+            $tokenCacheKey = 'sanctum_auth:' . $key;
+            $tokenCacheValue = serialize($token);
 
             if ($expiresAt) {
                 Cache::driver(config('sanctum.cache'))->put($tokenCacheKey, $tokenCacheValue, $expiresAt);

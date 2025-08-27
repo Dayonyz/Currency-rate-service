@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Queue\SerializesAndRestoresModelIdentifiers;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 use Laravel\Sanctum\PersonalAccessToken as BaseToken;
 use Illuminate\Support\Facades\Cache;
 use Psr\SimpleCache\InvalidArgumentException;
@@ -126,6 +127,9 @@ class PersonalAccessToken extends BaseToken
 
                 $instance = $getValidInstance();
 
+                Log::info(111);
+                Log::info($instance);
+                Log::info(222);
 
                 if ($instance) {
                     $version = (int)(microtime(true) * 1000000);

@@ -1,6 +1,9 @@
 build:
 	export $$(grep -v '^#' .env | xargs) && docker-compose build --no-cache
 
+build-m:
+	export $$(grep -v '^#' .env | xargs) && mutagen-compose build --no-cache
+
 init: ## Start and init modules
 	export $$(grep -v '^#' .env | xargs) && \
 	docker-compose up frontend -d && \
@@ -9,6 +12,15 @@ init: ## Start and init modules
 	docker cp vue_app_container:/usr/local/tmp/package.json ./
 
 	@make restart
+
+init-m: ## Start and init modules
+	export $$(grep -v '^#' .env | xargs) && \
+	mutagen-compose up frontend -d && \
+	docker cp vue_app_container:/usr/local/tmp/node_modules ./ && \
+	docker cp vue_app_container:/usr/local/tmp/package-lock.json ./ && \
+	docker cp vue_app_container:/usr/local/tmp/package.json ./
+
+	@make restart-m
 
 set-backend-port: ## Sets BACKEND_PORT in app/.env starting from DOCKER_NGINX_PORT from api/.env
 	@PORT=$$(grep '^DOCKER_NGINX_PORT=' ../api/.env | cut -d '=' -f2); \
@@ -82,14 +94,28 @@ start: ## Start container
 	export $$(grep -v '^#' .env | xargs) && docker-compose up frontend -d; \
 	echo "Application run: http://127.0.0.1:$$PORT/"
 
+start-m: ## Start container
+	@PORT=$$(grep -E '^VUE_APP_FRONTEND_PORT=' .env | cut -d '=' -f2 | tr -d '\r'); \
+	export $$(grep -v '^#' .env | xargs) && mutagen-compose up frontend -d; \
+	echo "Application run: http://127.0.0.1:$$PORT/"
+
 stop: ## Stops docker-compose
 	export $$(grep -v '^#' .env | xargs) && docker-compose down --remove-orphans
+
+stop-m: ## Stops docker-compose
+	export $$(grep -v '^#' .env | xargs) && mutagen-compose down --remove-orphans
 
 restart: ## Restarts container
 	make stop && make start
 
+restart-m: ## Restarts container
+	make stop-m && make start-m
+
 ssh: ## SSH to docker-compose
 	export $$(grep -v '^#' .env | xargs) && docker-compose run --rm frontend sh
+
+ssh-m: ## SSH to docker-compose
+	export $$(grep -v '^#' .env | xargs) && mutagen-compose run --rm frontend sh
 
 prune: ## Clear build cache
 	sudo docker system prune -af
