@@ -92,8 +92,8 @@ class EloquentCurrencyRatesRepository implements CurrencyRatesRepository
         ?int           $page = null
     ): array {
         $query = Rate::byPairIso($currency ,$baseCurrency)
-            ->orderBy('actual_at','desc')
-            ->orderBy('id');
+            ->orderBy('id', 'desc')
+            ->orderBy('actual_at', 'desc');
 
         $pageFromNull = $page ?: 1;
         $cacheKey = "{$currency->name}_{$baseCurrency->name}:page_marker_{$limit}_{$pageFromNull}";
