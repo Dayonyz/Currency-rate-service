@@ -26,7 +26,7 @@ class CurrencyRatesController extends Controller
 
         if ($itemsCount === 0) {
             return response()->json([
-                'success' => true,
+                'success' => false,
                 'data' => [
                     'rates' => [],
                     'page' => $page,
