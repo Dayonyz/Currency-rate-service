@@ -88,26 +88,22 @@ class EloquentCurrencyRatesRepository implements CurrencyRatesRepository
     public function getAllRates(
         CurrenciesEnum $currency,
         CurrenciesEnum $baseCurrency,
-        ?int           $limit = null,
-        ?int           $page = null
+        ?int $limit = null,
+        ?int $page = null
     ): array {
-        $query = Rate::byPairIso($currency ,$baseCurrency)
-            ->orderBy('id', 'desc')
-            ->orderBy('actual_at', 'desc');
+        $limit = $this->normalizeLimit($limit);
+        $page = $page ?: 1;
+        $sort = 'desc';
 
-        $pageFromNull = $page ?: 1;
-        $cacheKey = "{$currency->name}_{$baseCurrency->name}:page_marker_{$limit}_{$pageFromNull}";
-        $pageMarkerId = $this->cache?->get($cacheKey);
+        $query = Rate::byPairIso($currency, $baseCurrency)
+            ->orderBy('id', $sort)
+            ->orderBy('actual_at', $sort);
 
-        if ($pageMarkerId) {
-            $query->where('id', '>=', $pageMarkerId);
+        if ($page > 1) {
+            $query->offset(($page - 1) * $limit);
         }
 
-        $query->limit($this->normalizeLimit($limit));
-
-        if (is_null($pageMarkerId) && $pageFromNull > 1) {
-            $query->offset(($page - 1)*$limit);
-        }
+        $query->limit($limit);
 
         if ($this->cache) {
             $cacheKey = "{$currency->name}_{$baseCurrency->name}:rates_paginate_{$limit}_{$page}";
@@ -115,17 +111,15 @@ class EloquentCurrencyRatesRepository implements CurrencyRatesRepository
             $rates = $this->cache->remember(
                 $cacheKey,
                 config('repository.eloquent.cache.ttl'),
-                function () use ($query) {
-                    return CurrencyRateResource::collection($query->get())->toArray(request());
-                });
+                fn() => CurrencyRateResource::collection($query->get())->toArray(request())
+            );
 
             if (empty($rates)) {
                 $this->cache->forget($cacheKey);
-
                 return [];
-            } else {
-                return $rates;
             }
+
+            return $rates;
         }
 
         return CurrencyRateResource::collection($query->get())->toArray(request());

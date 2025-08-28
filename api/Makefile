@@ -220,7 +220,7 @@ install-octane: ## Install Laravel with octane for dev work
         php artisan view:clear && \
         php artisan migrate:fresh --seed && \
         php artisan queue:flush && \
-        php artisan app:fetch-currency-rates-since --currency=EUR --base=USD --M=01 --Y=2024 && \
+        php artisan app:fetch-currency-rates-since --currency=EUR --base=USD --M=01 --Y=2023 && \
         php artisan app:generate-stress-test-files && \
 		php artisan config:cache && \
 		php artisan route:cache && \
