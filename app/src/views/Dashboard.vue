@@ -1,7 +1,7 @@
 <template>
   <div>
     <h2>Dashboard</h2>
-    <h3>
+    <h3 v-if="currentRate">
       <span>{{ currentRate.currency.iso_code }}/{{ currentRate.base_currency.iso_code }}&nbsp;&nbsp;&nbsp;</span>
       <span style="color: green">{{ currentRate.rate }}&nbsp;&nbsp;&nbsp;</span>
       <span style="color: #2a6496">{{ currentRate.actual_at }}&nbsp;&nbsp;&nbsp;</span>

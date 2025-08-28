@@ -11,9 +11,13 @@ make build
 make init
 ```
 
-### Start docker container
+### make init - automatically starts FE container
+
+### Start, stop, restart docker container
 ```
 make start
+make stop
+make restart
 ```
 
 ## Test User credentials

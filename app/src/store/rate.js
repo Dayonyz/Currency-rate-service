@@ -36,12 +36,16 @@ const actions = {
         apiClient.get(endpoints.rates(CURRENCY.EUR, CURRENCY.USD, state.pageSize, state.page))
       ])
 
-      const { rates, pagesCount, itemsCount} = list.data
+      const { rates, page, pagesCount, itemsCount} = list.data
 
       commit('SET_CURRENT_RATE', rate.data)
       commit('SET_RATES', rates)
       commit('SET_PAGES_COUNT', pagesCount)
       commit('SET_ITEMS_COUNT', itemsCount)
+
+      if (page !== state.page) {
+        commit('SET_PAGE', page)
+      }
 
       return true
     } catch (error) {
@@ -49,6 +53,7 @@ const actions = {
       return false
     }
   },
+
   async changePage({ commit, dispatch }, page) {
     commit('SET_PAGE', page)
     await dispatch('fetchOnLoad')
