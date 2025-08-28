@@ -19,8 +19,8 @@ const actions = {
     } catch (e) {
       console.warn('Logout error', e)
     } finally {
-      commit('UNSET_TOKEN')
       commit('rate/RESET_STATE', null, { root: true })
+      commit('UNSET_TOKEN')
     }
   }
 }

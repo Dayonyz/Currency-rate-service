@@ -84,6 +84,10 @@ const mutations = {
 
   SET_ITEMS_COUNT (state, count) {
     state.itemsCount = count
+  },
+
+  RESET_STATE (state) {
+    Object.assign(state, defaultState())
   }
 }
 
