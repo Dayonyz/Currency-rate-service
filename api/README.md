@@ -168,7 +168,7 @@ default ✓ [======================================] 0000/1000 VUs  7m0s
 The bottleneck has been found – RPS has hit the performance limit of the current stack.
 That is, the system handles the load without errors, but the increase in the number of users does not increase RPS - this means the CPU-bound or IO-bound limit has already been reached.
 
-RPS does not grow, but is stable, so the system is scalable, but does not accelerate further on one instance.
+RPS does not grow, but is stable, so the system is scalable, but does not accelerate further on one or more instances.
 
 There are no reason to make horizontal scale with Nginx balancer on one instance (Macbook M1) - because we reached max 8 CPU limit with 1000 VUs, pm.max_children = 200 for Php-fpm and macOS uses the virtualization but not the containerization
 
