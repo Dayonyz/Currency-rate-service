@@ -397,46 +397,59 @@ Happy end, my friends 🎉🎉🎉  🏆🏆🏆
 
 P.S.
 
-And here is my last experiment with enabled spatie/laravel-responsecache package using memcached driver:
+And here is my last experiment: 
+- enabled spatie/laravel-responsecache package using memcached driver
+- refactored Sanctum cached tokens update
+- refactored load test users scenario
+- octane tunes up to --workers=16 --task-workers=4 --max-requests=5400
+- octane swoole enabled logging for debug (commented for production)
 
-**🔥 2464 RPS, avg HTTP request duration - 778ms, 1800 VUs load 🔥**
+**🔥 2366 RPS, avg HTTP request duration - 812ms, 1800 VUs load 🔥**
 
 ```
- █ THRESHOLDS 
+  █ THRESHOLDS 
+
+    checks
+    ✓ 'rate>0.95' rate=100.00%
 
     http_req_duration
-    ✓ 'p(90)<3000' p(90)=778.72ms
+    ✓ 'p(90)<3000' p(90)=812.79ms
 
 
   █ TOTAL RESULTS 
 
-    checks_total.......: 1035196 2464.596272/s
-    checks_succeeded...: 100.00% 1035196 out of 1035196
-    checks_failed......: 0.00%   0 out of 1035196
+    checks_total.......: 994254  2366.960827/s
+    checks_succeeded...: 100.00% 994254 out of 994254
+    checks_failed......: 0.00%   0 out of 994254
 
-    ✓ status is 200
+    ✓ User Journey - Login: GET current rate status is 200
+    ✓ User Journey - Login: GET rates first paginator, page 1 status is 200
+    ✓ User Journey - Random paginator: GET current rate status is 200
+    ✓ User Journey - Random paginator: GET rates random paginator, page 1 status is 200
+    ✓ User Journey - Random paginator: GET current rate status is 200
+    ✓ User Journey - Random paginator: GET rates random paginator, random page status is 200
 
     HTTP
-    http_req_duration..............: avg=624.69ms min=1.98ms  med=694.7ms max=1.46s p(90)=778.72ms p(95)=808.36ms
-      { expected_response:true }...: avg=624.69ms min=1.98ms  med=694.7ms max=1.46s p(90)=778.72ms p(95)=808.36ms
-    http_req_failed................: 0.00%   0 out of 1035196
-    http_reqs......................: 1035196 2464.596272/s
+    http_req_duration..............: avg=618.72ms min=1.92ms   med=675.73ms max=1.49s p(90)=812.79ms p(95)=869.94ms
+      { expected_response:true }...: avg=618.72ms min=1.92ms   med=675.73ms max=1.49s p(90)=812.79ms p(95)=869.94ms
+    http_req_failed................: 0.00%  0 out of 994254
+    http_reqs......................: 994254 2366.960827/s
 
     EXECUTION
-    iteration_duration.............: avg=2.5s     min=19.65ms med=2.82s   max=4.17s p(90)=3.05s    p(95)=3.17s   
-    iterations.....................: 258799  616.149068/s
-    vus............................: 4       min=4            max=1800
-    vus_max........................: 1800    min=1800         max=1800
+    iteration_duration.............: avg=3.92s    min=225.52ms med=4.32s    max=6.1s  p(90)=4.94s    p(95)=5.2s    
+    iterations.....................: 165709 394.493471/s
+    vus............................: 7      min=7           max=1800
+    vus_max........................: 1800   min=1800        max=1800
 
     NETWORK
-    data_received..................: 4.1 GB  9.8 MB/s
-    data_sent......................: 208 MB  495 kB/s
+    data_received..................: 3.3 GB 8.0 MB/s
+    data_sent......................: 199 MB 475 kB/s
 
 
 
 
-running (7m00.0s), 0000/1800 VUs, 258799 complete and 0 interrupted iterations
-default ✓ [======================================] 0000/1800 VUs  7m0s
+running (7m00.1s), 0000/1800 VUs, 165709 complete and 0 interrupted iterations
+contacts ✓ [======================================] 0000/1800 VUs  7m0s
 ```
 
 Impossible mission - completed 😎

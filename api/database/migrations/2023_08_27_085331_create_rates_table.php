@@ -29,6 +29,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::table('rates', function ($table) {
+            $table->dropIndex('rates_pair_id_actual_idx');
+        });
+
         Schema::dropIfExists('rates');
     }
 };

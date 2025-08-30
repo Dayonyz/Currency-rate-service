@@ -39,7 +39,7 @@ class GenerateStressTestFiles extends Command
     {
         $tokens = [];
 
-        for ($i= 0; $i < 4000; $i++) {
+        for ($i= 0; $i < 5400; $i++) {
             $tokens[] = User::factory()->create([
                 'name' => "Test user {$i}",
                 'email' => "test{$i}@example.com",

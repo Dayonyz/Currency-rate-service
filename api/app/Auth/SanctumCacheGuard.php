@@ -6,7 +6,6 @@ use App\Jobs\TokenUpdateLastUsedAtJob;
 use Illuminate\Contracts\Auth\Factory as AuthFactory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Log;
 use Laravel\Sanctum\Events\TokenAuthenticated;
 use Laravel\Sanctum\Guard;
 use Laravel\Sanctum\Sanctum;
@@ -45,15 +44,15 @@ class SanctumCacheGuard extends Guard
                 return null;
             }
 
-            $tokenAble = $accessToken->tokenable->withAccessToken(
+            $tokenable = $accessToken->tokenable->withAccessToken(
                 $accessToken
             );
 
             event(new TokenAuthenticated($accessToken));
 
-            TokenUpdateLastUsedAtJob::dispatch($accessToken, now()->toDateTimeString());
+            TokenUpdateLastUsedAtJob::dispatch(serialize($accessToken), now()->toDateTimeString());
 
-            return $tokenAble;
+            return $tokenable;
         }
 
         return null;

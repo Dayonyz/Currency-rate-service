@@ -57,25 +57,23 @@ class User extends Authenticatable
         ?DateTimeInterface $expiresAt = null
     ): NewAccessToken {
         $plainTextToken = $this->generateTokenString();
+        $version = (int) (microtime(true) * 1000000);
+        $key = sha1(config('app.key') . $plainTextToken);
 
         $token = $this->tokens()->create([
             'name' => $name,
             'token' => hash('sha256', $plainTextToken),
             'abilities' => $abilities,
             'expires_at' => $expiresAt,
-            'version' => (int) (microtime(true) * 1000000)
+            'version' => $version,
+            'key' => $key
         ]);
 
         $fullToken = $token->getKey() . '|' . $plainTextToken;
 
         if (config('sanctum.cache')) {
-            $key = hash('sha256', $fullToken);
-
             $userCacheKey = 'sanctum_auth_tokenable:' . $key;
             $userCacheValue = serialize($this);
-
-            $token->key = $key;
-            $token->save();
 
             $tokenCacheKey = 'sanctum_auth:' . $key;
             $tokenCacheValue = serialize($token);

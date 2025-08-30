@@ -24,9 +24,9 @@ services:
             mysql:
                 condition: service_healthy
             redis:
-                condition: service_started
+                condition: service_healthy
             memcached:
-                condition: service_started
+                condition: service_healthy
         networks:
             - backend-octane
     php-worker:
@@ -43,14 +43,15 @@ services:
             - ./.docker/php-swoole/php.ini:/usr/local/etc/php/php.ini
             - code:${DOCKER_CODE_FOLDER}:delegated
         working_dir: ${DOCKER_CODE_FOLDER}
-        command: php artisan octane:start --server=swoole --host=0.0.0.0 --port=8000 --workers=8 --task-workers=4 --max-requests=4500
+        #command: php artisan octane:start --server=swoole --host=0.0.0.0 --port=8000 --workers=8 --task-workers=4 --max-requests=4500 --log-level=debug >> /proc/1/fd/1 2>&1
+        command: php artisan octane:start --server=swoole --host=0.0.0.0 --port=8000 --workers=16 --task-workers=4 --max-requests=5400
         depends_on:
             mysql:
                 condition: service_healthy
-            redis:
-                condition: service_started
             memcached:
-                condition: service_started
+                condition: service_healthy
+            queue-worker:
+                condition: service_healthy
         ports:
             - "${DOCKER_NGINX_PORT}:8000"
         networks:
@@ -125,14 +126,26 @@ services:
                 - GROUP_DOCKER_ID=${DOCKER_GROUP_ID}
                 - PROJECT_PATH=${DOCKER_CODE_FOLDER}
         container_name: "${DOCKER_APP_SLUG}-queue"
+        environment:
+            APP_ENV: production
+            SESSION_DRIVER: memcached
+            CACHE_STORE: memcached
         volumes:
             - ./:${DOCKER_CODE_FOLDER}:delegated
             - ./.docker/php/php.ini:/usr/local/etc/php/php.ini
         working_dir: ${DOCKER_CODE_FOLDER}
+        #command: php artisan queue:work --sleep=3 --tries=3 >> /proc/1/fd/1 2>&1
         command: php artisan queue:work --sleep=3 --tries=3
+        healthcheck:
+            test: [ "CMD", "pgrep", "php" ]
+            interval: 5s
+            timeout: 5s
+            retries: 3
         depends_on:
-            - redis
-            - mysql
+            redis:
+                condition: service_healthy
+            memcached:
+                condition: service_healthy
         networks:
             - backend-octane
 
@@ -142,10 +155,13 @@ services:
         ports:
             - "${DOCKER_MEMCACHED_PORT}:11211"
         command: memcached -m 256 -c 1024 -v
+        healthcheck:
+            test: [ "CMD", "nc", "-z", "localhost", "11211" ]
+            interval: 3s
+            timeout: 3s
+            retries: 12
         networks:
             - backend-octane
-
-
 networks:
     backend-octane:
         name: backend-octane

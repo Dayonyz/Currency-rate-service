@@ -4,6 +4,10 @@ ARG PROJECT_PATH
 ARG USER_DOCKER_ID
 ARG GROUP_DOCKER_ID
 
+ENV PROJECT_PATH=${PROJECT_PATH}
+ENV USER_DOCKER_ID=${USER_DOCKER_ID}
+ENV GROUP_DOCKER_ID=${GROUP_DOCKER_ID}
+
 # OS packages
 RUN apt-get update && apt-get install -y \
     curl \
@@ -20,7 +24,6 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     libmemcached-dev \
     zlib1g-dev \
-    libssl-dev \
     libcurl4-openssl-dev \
     git \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -38,7 +41,7 @@ RUN docker-php-ext-install \
         posix \
         opcache \
     && pecl install redis \
-    && pecl install swoole --configureoptions="--enable-brotli=no" \
+    && pecl install swoole --configureoptions="--enable-brotli=no --enable-openssl" \
     && pecl install memcached \
     && docker-php-ext-enable redis swoole memcached opcache
 
@@ -59,5 +62,8 @@ RUN mkdir -p ${PROJECT_PATH} && \
     chmod -R 755 ${PROJECT_PATH}
 
 WORKDIR ${PROJECT_PATH}
+
+COPY --chmod=0755 .docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+ENTRYPOINT ["bash", "/usr/local/bin/entrypoint.sh"]
 
 USER "${USER_DOCKER_ID}:${GROUP_DOCKER_ID}"

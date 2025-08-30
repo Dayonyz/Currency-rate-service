@@ -9,15 +9,15 @@ class K6StressTestService
     /**
      * @param array $tokens
      * @param array $pageSizes
-     * @param string $baseUrl
-     * @param int $rps
+     ** @param string $baseUrl
+     * @param int $vus
      * @param string $filename
      */
     public static function generateStressTestFile(
         array $tokens,
         array $pageSizes,
-        string $baseUrl = 'http://localhost:8080',
-        int $rps = 1500,
+        string $baseUrl = 'http://127.0.0.1:8080',
+        int $vus = 1800,
         string $filename = 'load_test.js'
     ): void {
         $tokensJson = json_encode($tokens, JSON_PRETTY_PRINT);
@@ -25,67 +25,73 @@ class K6StressTestService
 
         $content = <<<JS
 import http from 'k6/http';
-import { sleep } from 'k6';
-import { check } from 'k6';
+import { sleep, group, check } from 'k6';
+import { vu } from 'k6/execution';
 
 const tokens = $tokensJson;
-
 const sizes = $pageSizesJson;
 
 export const options = {
-    stages: [
-        { duration: '1m', target: $rps },
-        { duration: '5m', target: $rps },
-        { duration: '1m', target: 0 },
-    ],
+    scenarios: {
+        contacts: {
+            executor: 'ramping-vus',
+            startVUs: 0,
+            stages: [
+                { duration: '1m', target: $vus },
+                { duration: '5m', target: $vus },
+                { duration: '1m', target: 0 },
+            ],
+            gracefulRampDown: '30s',
+        },
+    },
     thresholds: {
          http_req_duration: ['p(90)<3000'],
+         checks: ['rate>0.95'],
     },
 };
 
 export default function () {
-    let token = tokens[Math.floor(Math.random() * tokens.length)];
+    const tokenIndex = (vu.idInTest + vu.iterationInScenario) % tokens.length;
+    const token = tokens[tokenIndex];
     
     const item = sizes[Math.floor(Math.random() * sizes.length)];
     const page = Math.floor(Math.random() * item.maxPage) + 1;
+    const startPaginator = sizes[0];
     
-    let res1 = http.get("{$baseUrl}/api/currency/rate/EUR/USD", {
-        headers: {
-            'Accept': 'application/json',
-            'Authorization': `Bearer \${token}`
-        },
+    const headers = {
+        'Accept': 'application/json',
+        'Authorization': `Bearer \${token}`
+    };
+    
+        group('User Journey - Login', function () {
+        let res1 = http.get(`{$baseUrl}/api/currency/rate/EUR/USD`, { headers });
+        check(res1, { 'User Journey - Login: GET current rate status is 200': (r) => r.status === 200 });
+
+        let res2 = http.get(`{$baseUrl}/api/currency/rates/EUR/USD/\${startPaginator.size}/1`, { headers });
+        check(res2, { 'User Journey - Login: GET rates first paginator, page 1 status is 200': (r) => r.status === 200 });
     });
     
-    check(res1, { 'status is 200': (r) => r.status === 200 });
+    sleep(0.1);
     
-    let res2 = http.get(`{$baseUrl}/api/currency/rates/EUR/USD/\${item.size}/1`, {
-            headers: {
-                'Accept': 'application/json',
-                'Authorization': `Bearer \${token}`
-            },
-        });
+    group('User Journey - Random paginator: first page', function () {
+        let res3 = http.get(`{$baseUrl}/api/currency/rate/EUR/USD`, { headers });
+        check(res3, { 'User Journey - Random paginator: GET current rate status is 200': (r) => r.status === 200 });
+
+        let res4 = http.get(`{$baseUrl}/api/currency/rates/EUR/USD/\${item.size}/1`, { headers });
+        check(res4, { 'User Journey - Random paginator: GET rates random paginator, page 1 status is 200': (r) => r.status === 200 });
+    });
     
-    check(res2, { 'status is 200': (r) => r.status === 200 });
-        
+    sleep(0.1);
+
+    group('User Journey - Random paginator: random page', function () {
+        let res5 = http.get(`{$baseUrl}/api/currency/rate/EUR/USD`, { headers });
+        check(res5, { 'User Journey - Random paginator: GET current rate status is 200': (r) => r.status === 200 });
+
+        let res6 = http.get(`{$baseUrl}/api/currency/rates/EUR/USD/\${item.size}/\${page}`, { headers });
+        check(res6, { 'User Journey - Random paginator: GET rates random paginator, random page status is 200': (r) => r.status === 200 });
+    });
+    
     sleep(0.01);
-    
-    let res3 = http.get("{$baseUrl}/api/currency/rate/EUR/USD", {
-        headers: {
-            'Accept': 'application/json',
-            'Authorization': `Bearer \${token}`
-        },
-    });
-    
-    check(res3, { 'status is 200': (r) => r.status === 200 });
-    
-    let res4 = http.get(`{$baseUrl}/api/currency/rates/EUR/USD/\${item.size}/\${page}`, {
-            headers: {
-                'Accept': 'application/json',
-                'Authorization': `Bearer \${token}`
-            },
-        });
-    
-    check(res4, { 'status is 200': (r) => r.status === 200 });
 }
 JS;
 
