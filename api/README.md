@@ -258,7 +258,7 @@ default ✓ [======================================] 0000/1000 VUs  7m0s
 - Up to 1500VUs with same configuration - Conclusions - only 4.5 from 8 CPU used, nginx balancer on 2-3-4 instances had no effect, even worse than expected
 - Raised octane workers manually to command: php artisan octane:start --server=swoole --host=0.0.0.0 --port=${DOCKER_OCTANE_PORT} --workers=12 --task-workers=4 --max-requests=2000
 - Next record - is 941 RPS but avg HTTP request duration - 1.64s, 1500 VUs load
-- Any other tunes had no effect, and then I decided to turn off nginx
+- Any other tunes had no effect, and then I decided to turn off nginx on the next load test
 ```
 █ THRESHOLDS
 
