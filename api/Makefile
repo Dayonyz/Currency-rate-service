@@ -190,18 +190,16 @@ install: ## Install Laravel for dev work
 	rm -rf .docker/redis/data/*
 	@make start
 	docker-compose exec $(sshContainer) bash -c "\
-		composer install --optimize-autoloader --no-dev && \
-		php artisan key:generate && \
-		php artisan config:clear && \
-		php artisan route:clear && \
-		php artisan view:clear && \
-		php artisan config:cache && \
-		php artisan route:cache && \
-		php artisan view:cache && \
-		php artisan migrate:fresh --seed && \
-		php artisan queue:flush && \
+        composer install --optimize-autoloader --no-dev && \
+        yes | php artisan key:generate && \
+        yes | php artisan optimize:clear && \
+        yes | php artisan cache:clear && \
+        yes | php artisan migrate:fresh --force --no-interaction && \
+        yes | php artisan db:seed --force --no-interaction && \
+        php artisan queue:flush && \
 		php artisan app:fetch-currency-rates-since --currency=EUR --base=USD --M=01 --Y=2024 && \
-		php artisan app:generate-stress-test-files"
+		php artisan app:generate-stress-test-files && \
+		php artisan optimize"
 
 install-octane: ## Install Laravel with octane for dev work
 	docker rm -f currency-rates-fetching-mysql currency-rates-fetching-queue
@@ -218,18 +216,15 @@ install-octane: ## Install Laravel with octane for dev work
 	mutagen-compose -f docker-compose.octane.yml up -d $(preInstallOctaneServiceList)
 	mutagen-compose -f docker-compose.octane.yml run --rm $(sshContainer) bash -c "\
         composer install --optimize-autoloader --no-dev && \
-        php artisan key:generate && \
-        php artisan optimize:clear && \
-        php artisan config:clear && \
-        php artisan route:clear && \
-        php artisan view:clear && \
-        php artisan migrate:fresh --seed && \
+        yes | php artisan key:generate && \
+        yes | php artisan optimize:clear && \
+        yes | php artisan cache:clear && \
+        yes | php artisan migrate:fresh --force --no-interaction && \
+        yes | php artisan db:seed --force --no-interaction && \
         php artisan queue:flush && \
         php artisan app:fetch-currency-rates-since --currency=EUR --base=USD --M=01 --Y=2023 && \
         php artisan app:generate-stress-test-files && \
-		php artisan config:cache && \
-		php artisan route:cache && \
-		php artisan view:cache"
+		php artisan optimize"
 	mutagen-compose -f docker-compose.octane.yml rm -f $(sshContainer)
 	mutagen-compose -f docker-compose.octane.yml up -d $(sshOctaneContainer)
 
