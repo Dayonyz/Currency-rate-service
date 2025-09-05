@@ -404,51 +404,50 @@ And here is my last experiment:
 - octane tunes up to --workers=16 --task-workers=4 --max-requests=5400
 - octane swoole enabled logging for debug (commented for production)
 
-**🔥 2366 RPS, avg HTTP request duration - 812ms, 1800 VUs load 🔥**
+**🔥 2362 RPS, avg HTTP request duration - 833ms, 1800 VUs load 🔥**
 
 ```
-  █ THRESHOLDS 
+ █ THRESHOLDS 
 
     checks
     ✓ 'rate>0.95' rate=100.00%
 
     http_req_duration
-    ✓ 'p(90)<3000' p(90)=812.79ms
+    ✓ 'p(90)<3000' p(90)=833.39ms
 
 
   █ TOTAL RESULTS 
 
-    checks_total.......: 994254  2366.960827/s
-    checks_succeeded...: 100.00% 994254 out of 994254
-    checks_failed......: 0.00%   0 out of 994254
+    checks_total.......: 992556  2362.454002/s
+    checks_succeeded...: 100.00% 992556 out of 992556
+    checks_failed......: 0.00%   0 out of 992556
 
     ✓ User Journey - Login: GET current rate status is 200
     ✓ User Journey - Login: GET rates first paginator, page 1 status is 200
     ✓ User Journey - Random paginator: GET current rate status is 200
     ✓ User Journey - Random paginator: GET rates random paginator, page 1 status is 200
-    ✓ User Journey - Random paginator: GET current rate status is 200
     ✓ User Journey - Random paginator: GET rates random paginator, random page status is 200
 
     HTTP
-    http_req_duration..............: avg=618.72ms min=1.92ms   med=675.73ms max=1.49s p(90)=812.79ms p(95)=869.94ms
-      { expected_response:true }...: avg=618.72ms min=1.92ms   med=675.73ms max=1.49s p(90)=812.79ms p(95)=869.94ms
-    http_req_failed................: 0.00%  0 out of 994254
-    http_reqs......................: 994254 2366.960827/s
+    http_req_duration..............: avg=619.93ms min=1.98ms   med=666.58ms max=1.35s p(90)=833.39ms p(95)=885.34ms
+      { expected_response:true }...: avg=619.93ms min=1.98ms   med=666.58ms max=1.35s p(90)=833.39ms p(95)=885.34ms
+    http_req_failed................: 0.00%  0 out of 992556
+    http_reqs......................: 992556 2362.454002/s
 
     EXECUTION
-    iteration_duration.............: avg=3.92s    min=225.52ms med=4.32s    max=6.1s  p(90)=4.94s    p(95)=5.2s    
-    iterations.....................: 165709 394.493471/s
+    iteration_duration.............: avg=3.93s    min=225.12ms med=4.23s    max=6.85s p(90)=5.05s    p(95)=5.26s   
+    iterations.....................: 165426 393.742334/s
     vus............................: 7      min=7           max=1800
     vus_max........................: 1800   min=1800        max=1800
 
     NETWORK
     data_received..................: 3.3 GB 8.0 MB/s
-    data_sent......................: 199 MB 475 kB/s
+    data_sent......................: 199 MB 474 kB/s
 
 
 
 
-running (7m00.1s), 0000/1800 VUs, 165709 complete and 0 interrupted iterations
+running (7m00.1s), 0000/1800 VUs, 165426 complete and 0 interrupted iterations
 contacts ✓ [======================================] 0000/1800 VUs  7m0s
 ```
 

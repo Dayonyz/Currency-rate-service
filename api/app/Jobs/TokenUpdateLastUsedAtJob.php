@@ -3,11 +3,11 @@
 namespace App\Jobs;
 
 use App\Models\PersonalAccessToken;
+use App\Services\CacheAccessTokensService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Cache;
 use Psr\SimpleCache\InvalidArgumentException;
 
 class TokenUpdateLastUsedAtJob implements ShouldQueue
@@ -50,14 +50,10 @@ class TokenUpdateLastUsedAtJob implements ShouldQueue
         }
 
         $jobTokenModel = $model;
+        $cacheTokenModel = app(CacheAccessTokensService::class)->getAccessTokenByKey($jobTokenModel->key);
 
-        $redisTokenModelRaw = Cache::driver(config('sanctum.cache'))
-            ->get('sanctum_auth:' . $jobTokenModel->key);
-
-        if ($redisTokenModelRaw) {
-            $redisTokenModel = unserialize($redisTokenModelRaw);
-
-            if ($jobTokenModel->version >= $redisTokenModel->version) {
+        if ($cacheTokenModel) {
+            if ($jobTokenModel->version >= $cacheTokenModel->version) {
                 $jobTokenModel->forceFill(['last_used_at' => $this->now])->save();
             }
         } else {
@@ -65,7 +61,7 @@ class TokenUpdateLastUsedAtJob implements ShouldQueue
 
             if ($dbTokenModel) {
                 if ($jobTokenModel->version >= $dbTokenModel->version) {
-                    $dbTokenModel->forceFill(['last_used_at' => $this->now])->save();
+                    $jobTokenModel->forceFill(['last_used_at' => $this->now])->save();
                 }
             }
         }

@@ -2,13 +2,13 @@
 
 namespace App\Models;
 
+use App\Services\CacheAccessTokensService;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Queue\SerializesAndRestoresModelIdentifiers;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Cache;
 use Laravel\Sanctum\HasApiTokens;
 use Laravel\Sanctum\NewAccessToken;
 
@@ -58,7 +58,7 @@ class User extends Authenticatable
     ): NewAccessToken {
         $plainTextToken = $this->generateTokenString();
         $version = (int) (microtime(true) * 1000000);
-        $key = sha1(config('app.key') . $plainTextToken);
+        $key = CacheAccessTokensService::getKey($plainTextToken);
 
         $token = $this->tokens()->create([
             'name' => $name,
@@ -72,26 +72,7 @@ class User extends Authenticatable
         $fullToken = $token->getKey() . '|' . $plainTextToken;
 
         if (config('sanctum.cache')) {
-            $userCacheKey = 'sanctum_auth_tokenable:' . $key;
-            $userCacheValue = serialize($this);
-
-            $tokenCacheKey = 'sanctum_auth:' . $key;
-            $tokenCacheValue = serialize($token);
-
-            if ($expiresAt) {
-                Cache::driver(config('sanctum.cache'))->put($tokenCacheKey, $tokenCacheValue, $expiresAt);
-                Cache::driver(config('sanctum.cache'))->put($userCacheKey, $userCacheValue, $expiresAt);
-            } else {
-                Cache::driver(config('sanctum.cache'))
-                    ->rememberForever($tokenCacheKey, function () use ($tokenCacheValue) {
-                        return $tokenCacheValue;
-                    });
-
-                Cache::driver(config('sanctum.cache'))
-                    ->rememberForever($userCacheKey, function () use ($userCacheValue) {
-                        return $userCacheValue;
-                    });
-            }
+            app(CacheAccessTokensService::class)->store($key, $token, $this);
         }
 
         return new NewAccessToken($token, $fullToken);

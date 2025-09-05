@@ -2,11 +2,11 @@
 
 namespace App\Models;
 
+use App\Services\CacheAccessTokensService;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Queue\SerializesAndRestoresModelIdentifiers;
 use Illuminate\Queue\SerializesModels;
 use Laravel\Sanctum\PersonalAccessToken as BaseToken;
-use Illuminate\Support\Facades\Cache;
 use Psr\SimpleCache\InvalidArgumentException;
 
 class PersonalAccessToken extends BaseToken
@@ -39,8 +39,7 @@ class PersonalAccessToken extends BaseToken
 
         static::deleting(function ($model) {
             if (config('sanctum.cache')) {
-                Cache::driver(config('sanctum.cache'))->delete('sanctum_auth:' . $model->key);
-                Cache::driver(config('sanctum.cache'))->delete('sanctum_auth_tokenable:' . $model->key);
+                app(CacheAccessTokensService::class)->deleteAccessTokenByKey($model->key);
             }
         });
     }
@@ -51,18 +50,13 @@ class PersonalAccessToken extends BaseToken
     public function getTokenableAttribute(): mixed
     {
         if (config('sanctum.cache')) {
-            $tokenableCacheKey = 'sanctum_auth_tokenable:' . $this->key;
-            $tokenableSerialized = Cache::driver(config('sanctum.cache'))->get($tokenableCacheKey);
+            $instance = app(CacheAccessTokensService::class)->getTokenAbleByKey($this->key);
 
-            if ($tokenableSerialized) {
-                $instance = unserialize($tokenableSerialized);
-
-                if (is_object($instance) &&
-                    $instance->id === $this->tokenable_id &&
-                    $instance::class === $this->tokenable_type
-                ) {
-                    return $instance;
-                }
+            if ($instance &&
+                $instance->id === $this->tokenable_id &&
+                $instance::class === $this->tokenable_type
+            ) {
+                return $instance;
             }
         }
 
@@ -82,41 +76,26 @@ class PersonalAccessToken extends BaseToken
 
         [$id, $plainTextToken] = explode('|', $token, 2);
 
-        $key = sha1(config('app.key') . $plainTextToken);
-        $cacheKey = 'sanctum_auth:' . $key;
+        $key = CacheAccessTokensService::getKey($plainTextToken);
 
-        $cachedSerializedToken = Cache::driver(config('sanctum.cache'))->get($cacheKey);
+        $cacheService = app(CacheAccessTokensService::class);
+        /**
+         * @var CacheAccessTokensService $cacheService
+         */
+        $instance = $cacheService->getAccessTokenByKey($key);
 
-        if ($cachedSerializedToken) {
-            $instance = unserialize($cachedSerializedToken);
+        if ($instance && $instance->id === (int)$id) {
+            $instance->version = (int)(microtime(true) * 1000000);
+            $cacheService->store($key, $instance);
 
-            if ($instance instanceof self && $instance->id === (int)$id) {
-                $instance->version = (int)(microtime(true) * 1000000);
-                if ($instance->expires_at) {
-                    Cache::driver(config('sanctum.cache'))->put(
-                        $cacheKey,
-                        serialize($instance),
-                        $instance->expires_at
-                    );
-                } else {
-                    Cache::driver(config('sanctum.cache'))->forever($cacheKey, serialize($instance));
-                }
-
-                return $instance;
-            }
+            return $instance;
         }
 
         $instance = parent::findToken($token);
 
         if (config('sanctum.cache') && $instance) {
             $instance->version = (int)(microtime(true) * 1000000);
-            $serializedForCache = serialize($instance);
-
-            if ($instance->expires_at) {
-                Cache::driver(config('sanctum.cache'))->put($cacheKey, $serializedForCache, $instance->expires_at);
-            } else {
-                Cache::driver(config('sanctum.cache'))->forever($cacheKey, $serializedForCache);
-            }
+            $cacheService->store($key, $instance);
         }
 
         return $instance;

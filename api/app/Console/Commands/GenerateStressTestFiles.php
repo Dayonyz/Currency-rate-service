@@ -22,7 +22,7 @@ class GenerateStressTestFiles extends Command
      *
      * @var string
      */
-    protected $description = 'Creates stress-test.xml for Tsung utility';
+    protected $description = 'Creates load_test.js for Grafana K6 utility';
 
     private CurrencyRatesRepository $currencyRatesRepository;
 
