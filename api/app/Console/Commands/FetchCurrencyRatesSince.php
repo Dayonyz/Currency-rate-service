@@ -21,7 +21,7 @@ class FetchCurrencyRatesSince extends Command
      *
      * @var string
      */
-    protected $description = 'Command description';
+    protected $description = 'Fetch currency rates since date';
 
     /**
      * Execute the console command.
