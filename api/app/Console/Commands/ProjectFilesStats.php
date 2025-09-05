@@ -18,7 +18,7 @@ class ProjectFilesStats extends Command
      *
      * @var string
      */
-    protected $description = 'Command description';
+    protected $description = 'Project files stats: files count, total size';
 
     /**
      * Execute the console command.
