@@ -43,7 +43,8 @@ RUN docker-php-ext-install \
     && pecl install redis \
     && pecl install swoole --configureoptions="--enable-brotli=no --enable-openssl" \
     && pecl install memcached \
-    && docker-php-ext-enable redis swoole memcached opcache
+    && pecl install igbinary \
+    && docker-php-ext-enable redis swoole memcached opcache igbinary
 
 # User & Group
 RUN groupmod -o -g ${GROUP_DOCKER_ID} www-data \

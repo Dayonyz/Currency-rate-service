@@ -15,11 +15,6 @@ class SanctumServiceProvider extends ServiceProvider
     public function boot(): void
     {
         if (config('sanctum.cache')) {
-
-//            $this->app->singleton(CacheAccessTokensRepository::class, function () {
-//                return new CacheAccessTokensRepository(Cache::driver(config('sanctum.cache')));
-//            });
-
             Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
             $this->configureGuard();
         }

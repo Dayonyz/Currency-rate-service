@@ -36,12 +36,22 @@ class CacheAccessTokensService
 
     protected static function sleep(Model $model): string
     {
-        return serialize($model);
+        return igbinary_serialize([
+            'data' => $model->getAttributes(),
+            'class' => $model::class
+        ]);
     }
 
     protected static function wakeup(string $data): Model | PersonalAccessToken
     {
-        return unserialize($data);
+        $un_serialize = igbinary_unserialize($data);
+        /**
+         * @var Model $model
+         */
+        $model = (new $un_serialize['class'])->forceFill($un_serialize['data']);
+        $model->exists = true;
+
+        return $model;
     }
 
     public static function store(string $plainTextToken, PersonalAccessToken $token, ?Model $provider = null): void
