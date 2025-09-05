@@ -7,7 +7,6 @@ use App\Models\PersonalAccessToken;
 use Illuminate\Auth\RequestGuard;
 use Illuminate\Contracts\Auth\Factory;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Sanctum\Sanctum;
 
@@ -16,6 +15,11 @@ class SanctumServiceProvider extends ServiceProvider
     public function boot(): void
     {
         if (config('sanctum.cache')) {
+
+//            $this->app->singleton(CacheAccessTokensRepository::class, function () {
+//                return new CacheAccessTokensRepository(Cache::driver(config('sanctum.cache')));
+//            });
+
             Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
             $this->configureGuard();
         }
@@ -47,5 +51,4 @@ class SanctumServiceProvider extends ServiceProvider
             $auth->createUserProvider($config['provider'] ?? null)
         );
     }
-
 }

@@ -163,6 +163,9 @@ return [
             'persistent' => true,
             'persistent_id' => 'cache_id_app',
             'read_timeout' => 60,
+//            'options' => [
+//                'serializer' => 'igbinary'
+//            ],
         ],
     ],
 ];

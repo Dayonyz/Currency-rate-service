@@ -3,16 +3,15 @@
 namespace App\Jobs;
 
 use App\Models\PersonalAccessToken;
+use App\Services\CacheAccessTokensService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Cache;
 use Psr\SimpleCache\InvalidArgumentException;
 
 class TokenUpdateLastUsedAtJob implements ShouldQueue
 {
-    use InteractsWithQueue, Queueable, SerializesModels;
+    use InteractsWithQueue, Queueable;
 
     public string $token;
     public string $now;
@@ -41,6 +40,9 @@ class TokenUpdateLastUsedAtJob implements ShouldQueue
         }
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     private function saveToken(PersonalAccessToken $model): void
     {
         if (!config('sanctum.cache')) {
@@ -49,23 +51,19 @@ class TokenUpdateLastUsedAtJob implements ShouldQueue
             return;
         }
 
-        $jobTokenModel = $model;
+        $jobAccessToken = $model;
+        $cachedAccessToken = CacheAccessTokensService::getAccessTokenByKey($jobAccessToken->key);
 
-        $redisTokenModelRaw = Cache::driver(config('sanctum.cache'))
-            ->get('sanctum_auth:' . $jobTokenModel->key);
-
-        if ($redisTokenModelRaw) {
-            $redisTokenModel = unserialize($redisTokenModelRaw);
-
-            if ($jobTokenModel->version >= $redisTokenModel->version) {
-                $jobTokenModel->forceFill(['last_used_at' => $this->now])->save();
+        if ($cachedAccessToken) {
+            if ($jobAccessToken->version >= $cachedAccessToken->version) {
+                $jobAccessToken->forceFill(['last_used_at' => $this->now])->save();
             }
         } else {
-            $dbTokenModel = PersonalAccessToken::find($jobTokenModel->id);
+            $dbTokenModel = PersonalAccessToken::find($jobAccessToken->id);
 
             if ($dbTokenModel) {
-                if ($jobTokenModel->version >= $dbTokenModel->version) {
-                    $dbTokenModel->forceFill(['last_used_at' => $this->now])->save();
+                if ($jobAccessToken->version >= $dbTokenModel->version) {
+                    $jobAccessToken->forceFill(['last_used_at' => $this->now])->save();
                 }
             }
         }
