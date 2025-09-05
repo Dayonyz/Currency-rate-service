@@ -11,12 +11,12 @@ class CacheAccessTokensService
 {
     protected static function getTokenPrefix(): string
     {
-        return 'sanctum_auth:';
+        return 'sanctum_token:';
     }
 
     protected static function getTokenablePrefix(): string
     {
-        return 'sanctum_auth_tokenable:';
+        return 'sanctum_tokenable:';
     }
 
     public static function getKey(string $plainTextToken): string
@@ -24,47 +24,27 @@ class CacheAccessTokensService
         return sha1(config('app.key') . $plainTextToken);
     }
 
-    protected static function getTokenKey(string $plainTextToken): string
-    {
-        return static::getTokenPrefix() . static::getKey($plainTextToken);
-    }
-
-    protected static function getTokenableKey(string $plainTextToken): string
-    {
-        return static::getTokenablePrefix() . static::getKey($plainTextToken);
-    }
-
     protected static function sleep(Model $model): string
     {
-        return igbinary_serialize([
-            'data' => $model->getAttributes(),
-            'class' => $model::class
-        ]);
+        return serialize($model);
     }
 
     protected static function wakeup(string $data): Model | PersonalAccessToken
     {
-        $un_serialize = igbinary_unserialize($data);
-        /**
-         * @var Model $model
-         */
-        $model = (new $un_serialize['class'])->forceFill($un_serialize['data']);
-        $model->exists = true;
-
-        return $model;
+        return unserialize($data);
     }
 
-    public static function store(string $plainTextToken, PersonalAccessToken $token, ?Model $provider = null): void
+    public static function store(string $key, PersonalAccessToken $token, ?Model $provider = null): void
     {
         if ($token->expires_at) {
             Cache::driver(config('sanctum.cache'))->put(
-                static::getTokenKey($plainTextToken),
+                static::getTokenPrefix() . $key,
                 static::sleep($token),
                 $token->expires_at
             );
             if ($provider) {
                 Cache::driver(config('sanctum.cache'))->put(
-                    static::getTokenableKey($provider),
+                    static::getTokenablePrefix() . $key,
                     static::sleep($provider),
                     $token->expires_at
                 );
@@ -72,43 +52,17 @@ class CacheAccessTokensService
 
         } else {
             Cache::driver(config('sanctum.cache'))->forever(
-                static::getTokenKey($plainTextToken),
+                static::getTokenablePrefix() . $key,
                 static::sleep($token)
             );
 
             if ($provider) {
                 Cache::driver(config('sanctum.cache'))->forever(
-                    static::getTokenableKey($provider),
+                    static::getTokenablePrefix() . $key,
                     static::sleep($provider)
                 );
             }
         }
-    }
-
-    /**
-     * @throws InvalidArgumentException
-     */
-    public static function getAccessTokenByToken(string $token): ?PersonalAccessToken
-    {
-        [$id, $plainTextToken] = explode('|', $token, 2);
-
-        if (!$plainTextToken) {
-            return null;
-        }
-
-        $serializedModel = Cache::driver(config('sanctum.cache'))->get(static::getTokenKey($plainTextToken));
-
-        if (!$serializedModel) {
-            return null;
-        }
-
-        $model = static::wakeup($serializedModel);
-
-        if ($model->id !== $id) {
-            return null;
-        }
-
-        return $model;
     }
 
     /**

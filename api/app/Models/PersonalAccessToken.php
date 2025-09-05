@@ -50,7 +50,10 @@ class PersonalAccessToken extends BaseToken
         if (config('sanctum.cache')) {
             $instance = CacheAccessTokensService::getTokenableByKey($this->key);
 
-            if ($instance && $instance->id === $this->tokenable_id && $instance::class === $this->tokenable_type) {
+            if ($instance &&
+                $instance->id === $this->tokenable_id &&
+                $instance::class === $this->tokenable_type
+            ) {
                 return $instance;
             }
         }
@@ -70,21 +73,22 @@ class PersonalAccessToken extends BaseToken
         }
 
         [$id, $plainTextToken] = explode('|', $token, 2);
+        $key = CacheAccessTokensService::getKey($plainTextToken);
 
-        $instance = CacheAccessTokensService::getAccessTokenByToken($token);
+        $instance = CacheAccessTokensService::getAccessTokenByKey($key);
 
-        if ($instance && $instance->id === (int)$id && $plainTextToken) {
+        if ($instance && $instance->id === (int)$id) {
             $instance->version = (int)(microtime(true) * 1000000);
-            CacheAccessTokensService::store($plainTextToken, $instance);
+            CacheAccessTokensService::store($key, $instance);
 
             return $instance;
         }
 
         $instance = parent::findToken($token);
 
-        if ($instance && $instance->id === (int)$id && $plainTextToken) {
+        if ($instance && $instance->id === (int)$id) {
             $instance->version = (int)(microtime(true) * 1000000);
-            CacheAccessTokensService::store($plainTextToken, $instance);
+            CacheAccessTokensService::store($key, $instance);
         }
 
         return $instance;

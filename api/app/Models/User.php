@@ -71,7 +71,7 @@ class User extends Authenticatable
         $fullToken = $token->getKey() . '|' . $plainTextToken;
 
         if (config('sanctum.cache')) {
-            CacheAccessTokensService::store($plainTextToken, $token, $this);
+            CacheAccessTokensService::store($key, $token, $this);
         }
 
         return new NewAccessToken($token, $fullToken);
