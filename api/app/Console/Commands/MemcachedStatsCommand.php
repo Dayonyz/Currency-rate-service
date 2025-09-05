@@ -18,7 +18,7 @@ class MemcachedStatsCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Command description';
+    protected $description = 'Get memcached stats usage';
 
     /**
      * Execute the console command.
