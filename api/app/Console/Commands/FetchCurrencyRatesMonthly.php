@@ -27,7 +27,7 @@ class FetchCurrencyRatesMonthly extends Command
      *
      * @var string
      */
-    protected $description = 'Command description';
+    protected $description = 'Fetch currency rates monthly';
 
     private CurrencyRatesRepository $currencyRatesRepository;
 
