@@ -30,9 +30,6 @@ class CommonPerformanceTests extends Command
      */
     public function handle()
     {
-        $preparedToken = (new PersonalAccessToken)->setConnection(config('database.default'));
-        $preparedToken->exists = true;
-
         echo "---------------------------" . "\n";
 
         $cacheService = app(CacheAccessTokensService::class);
@@ -72,8 +69,8 @@ class CommonPerformanceTests extends Command
         echo "Create Model copy directly: " . round(($end-$start)/(1000*1000), 2) . "\n";
         echo "---------------------------" . "\n";
 
-
         $preparedToken = (new PersonalAccessToken)->setConnection(config('database.default'));
+        $preparedToken->exists = true;
 
         $start = hrtime(true);
         for ($i = 0; $i < 10000; $i++) {
