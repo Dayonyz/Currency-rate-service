@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Helpers\ContainerHelper;
-use App\Services\CacheAccessTokensService;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;

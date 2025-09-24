@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Helpers\ContainerHelper;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Sanctum\PersonalAccessToken as BaseToken;
 use Psr\SimpleCache\InvalidArgumentException;
@@ -32,8 +31,6 @@ class PersonalAccessToken extends BaseToken
         'version'
     ];
 
-    private ?Model $cachedTokenAble = null;
-
     protected static function boot()
     {
         parent::boot();
@@ -41,29 +38,6 @@ class PersonalAccessToken extends BaseToken
         static::deleting(function ($model) {
             ContainerHelper::getAccessTokenService()->deleteAccessTokenById($model->id);
         });
-    }
-
-    /**
-     * @throws InvalidArgumentException
-     */
-    public function getTokenableAttribute(): mixed
-    {
-        if ($this->cachedTokenAble) {
-            return $this->cachedTokenAble;
-        }
-
-        $tokenAble = ContainerHelper::getAccessTokenService()->getTokenAbleInstance($this->id);
-
-        if ($tokenAble &&
-            $tokenAble->id === $this->tokenable_id &&
-            $tokenAble::class === $this->tokenable_type
-        ) {
-            $this->cachedTokenAble = $tokenAble;
-
-            return $tokenAble;
-        }
-
-        return parent::tokenable()->first();
     }
 
     /**
@@ -79,7 +53,7 @@ class PersonalAccessToken extends BaseToken
 
         [$id, $plainTextToken] = explode('|', $token, 2);
 
-        $accessToken = ContainerHelper::getAccessTokenService()->getAccessTokenInstance($id);
+        $accessToken = ContainerHelper::getAccessTokenService()->getAccessTokenWithProvider($id);
 
         if ($accessToken &&
             $accessToken->id === (int)$id &&

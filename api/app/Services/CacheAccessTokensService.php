@@ -76,6 +76,27 @@ class CacheAccessTokensService
     /**
      * @throws InvalidArgumentException
      */
+    public function getAccessTokenWithProvider(int $id): ?PersonalAccessToken
+    {
+        $rawOriginalToken = $this->cache->get("sanctum_auth:token:" . $id);
+        $rawOriginalProvider = $this->cache->get("sanctum_auth:tokenable:" . $id);
+
+        if (! $rawOriginalToken || ! $rawOriginalProvider) {
+            return null;
+        }
+
+        return (clone $this->preparedToken)
+            ->setRawAttributes(unserialize($rawOriginalToken))
+            ->setRelation(
+                'tokenable',
+                (clone $this->preparedUser)->setRawAttributes(unserialize($rawOriginalProvider))->syncOriginal()
+            )
+            ->syncOriginal();
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
     public function getAccessTokenInstance(int $id): ?PersonalAccessToken
     {
         $rawOriginal = $this->cache->get("sanctum_auth:token:" . $id);
@@ -85,20 +106,6 @@ class CacheAccessTokensService
         }
 
         return (clone $this->preparedToken)->setRawAttributes(unserialize($rawOriginal))->syncOriginal();
-    }
-
-    /**
-     * @throws InvalidArgumentException
-     */
-    public function getTokenAbleInstance(int $id): ?Model
-    {
-        $rawOriginal = $this->cache->get("sanctum_auth:tokenable:" . $id);
-
-        if (!$rawOriginal) {
-            return null;
-        }
-
-        return (clone $this->preparedUser)->setRawAttributes(unserialize($rawOriginal))->syncOriginal();
     }
 
     /**
