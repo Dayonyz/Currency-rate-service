@@ -1,4 +1,4 @@
 *
 !data/
 !.gitignore
-!redis.conf
+!redis-queue.conf

@@ -3,7 +3,8 @@ version: "3.9"
 volumes:
     code:
     db:
-    redis:
+    queue:
+    cache:
 
 services:
     php:
@@ -23,9 +24,7 @@ services:
         depends_on:
             mysql:
                 condition: service_healthy
-            redis:
-                condition: service_healthy
-            memcached:
+            redis-cache:
                 condition: service_healthy
         networks:
             - backend-octane
@@ -48,9 +47,9 @@ services:
         depends_on:
             mysql:
                 condition: service_healthy
-            memcached:
-                condition: service_healthy
             queue-worker:
+                condition: service_healthy
+            redis-cache:
                 condition: service_healthy
         ports:
             - "${DOCKER_NGINX_PORT}:8000"
@@ -99,15 +98,31 @@ services:
             start_period: 3s
         networks:
             - backend-octane
-
-    redis:
+    redis-cache:
         image: redis:alpine
-        container_name: "${DOCKER_APP_SLUG}-redis"
+        container_name: "${DOCKER_APP_SLUG}-redis-cache"
+        ports:
+            - "${DOCKER_REDIS_CACHE_PORT}:6379"
+        volumes:
+            - cache:/cache
+            - ./.docker/redis/redis-cache.conf:/usr/local/etc/redis/redis.conf
+        command: redis-server /usr/local/etc/redis/redis.conf
+        healthcheck:
+            test: [ "CMD", "redis-cli", "ping" ]
+            interval: 3s
+            timeout: 5s
+            retries: 10
+        networks:
+            - backend-octane
+
+    redis-queue:
+        image: redis:alpine
+        container_name: "${DOCKER_APP_SLUG}-redis-queue"
         ports:
             - "${DOCKER_REDIS_PORT}:6379"
         volumes:
-            - redis:/data
-            - ./.docker/redis/redis.conf:/usr/local/etc/redis/redis.conf
+            - queue:/queue
+            - ./.docker/redis/redis-queue.conf:/usr/local/etc/redis/redis.conf
         command: redis-server /usr/local/etc/redis/redis.conf
         healthcheck:
             test: [ "CMD", "redis-cli", "ping" ]
@@ -128,11 +143,13 @@ services:
         container_name: "${DOCKER_APP_SLUG}-queue"
         environment:
             APP_ENV: production
-            SESSION_DRIVER: memcached
-            CACHE_STORE: memcached
+            SESSION_DRIVER: redis
+            CACHE_STORE: redis
+            SANCTUM_CACHE_STORE: redis-sanctum
+            REPOSITORY_CACHE_STORE: redis-repository
         volumes:
             - ./:${DOCKER_CODE_FOLDER}:delegated
-            - ./.docker/php/php.ini:/usr/local/etc/php/php.ini
+            - ./.docker/php-swoole/php.ini:/usr/local/etc/php/php.ini
         working_dir: ${DOCKER_CODE_FOLDER}
         #command: php artisan queue:work --sleep=3 --tries=3 >> /proc/1/fd/1 2>&1
         command: php artisan queue:work --sleep=3 --tries=3
@@ -142,26 +159,11 @@ services:
             timeout: 5s
             retries: 3
         depends_on:
-            redis:
-                condition: service_healthy
-            memcached:
+            redis-cache:
                 condition: service_healthy
         networks:
             - backend-octane
 
-    memcached:
-        image: memcached:alpine
-        container_name: "${DOCKER_APP_SLUG}-memcached"
-        ports:
-            - "${DOCKER_MEMCACHED_PORT}:11211"
-        command: memcached -m 256 -c 1024 -v
-        healthcheck:
-            test: [ "CMD", "nc", "-z", "localhost", "11211" ]
-            interval: 3s
-            timeout: 3s
-            retries: 12
-        networks:
-            - backend-octane
 networks:
     backend-octane:
         name: backend-octane
@@ -199,9 +201,19 @@ x-mutagen:
                     defaultDirectoryMode: 0777
                     defaultOwner: "id:${DOCKER_USER_ID}"
                     defaultGroup: "id:${DOCKER_GROUP_ID}"
-        redis:
-            alpha: "./.docker/redis/data"
-            beta: "volume://redis"
+        queue:
+            alpha: "./.docker/redis/queue"
+            beta: "volume://queue"
+            mode: "two-way-resolved"
+            configurationBeta:
+                permissions:
+                    defaultFileMode: 0666
+                    defaultDirectoryMode: 0777
+                    defaultOwner: "id:${DOCKER_USER_ID}"
+                    defaultGroup: "id:${DOCKER_GROUP_ID}"
+        cache:
+            alpha: "./.docker/redis/cache"
+            beta: "volume://cache"
             mode: "two-way-resolved"
             configurationBeta:
                 permissions:

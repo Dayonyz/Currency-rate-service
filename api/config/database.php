@@ -145,23 +145,53 @@ return [
     'redis' => [
         'client' => env('REDIS_CLIENT', 'phpredis'),
 
-        'default' => [
-            'host' => env('REDIS_HOST', '127.0.0.1'),
+        'cache' => [
+            'host' => env('REDIS_CACHE_HOST', 'redis-cache'),
             'password' => env('REDIS_PASSWORD', null),
             'port' => env('REDIS_PORT', 6379),
             'database' => 0,
             'persistent' => true,
-            'persistent_id' => 'default_id_app',
+            'persistent_id' => 'cache_connection',
             'read_timeout' => 60,
         ],
 
-        'cache' => [
-            'host' => env('REDIS_HOST', '127.0.0.1'),
+        'cache-sanctum' => [
+            'host' => env('REDIS_CACHE_HOST', 'redis-cache'),
             'password' => env('REDIS_PASSWORD', null),
             'port' => env('REDIS_PORT', 6379),
             'database' => 1,
             'persistent' => true,
-            'persistent_id' => 'cache_id_app',
+            'persistent_id' => 'cache_connection_sanctum',
+            'read_timeout' => 60,
+        ],
+
+        'cache-repository' => [
+            'host' => env('REDIS_CACHE_HOST', 'redis-cache'),
+            'password' => env('REDIS_PASSWORD', null),
+            'port' => env('REDIS_PORT', 6379),
+            'database' => 2,
+            'persistent' => true,
+            'persistent_id' => 'cache_connection_repository',
+            'read_timeout' => 60,
+        ],
+
+        'cache-response' => [
+            'host' => env('REDIS_CACHE_HOST', 'redis-cache'),
+            'password' => env('REDIS_PASSWORD', null),
+            'port' => env('REDIS_PORT', 6379),
+            'database' => 3,
+            'persistent' => true,
+            'persistent_id' => 'cache_connection_response',
+            'read_timeout' => 60,
+        ],
+
+        'queue' => [
+            'host' => env('REDIS_QUEUE_HOST', 'redis-queue'),
+            'password' => env('REDIS_PASSWORD', null),
+            'port' => env('REDIS_PORT', 6379),
+            'database' => 0,
+            'persistent' => true,
+            'persistent_id' => 'queue_connection',
             'read_timeout' => 60,
         ],
     ],

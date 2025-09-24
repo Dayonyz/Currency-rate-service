@@ -21,11 +21,7 @@ RUN apt-get update && apt-get install -y \
     procps \
     libssl-dev \
     pkg-config \
-    libpq-dev \
-    libmemcached-dev \
-    zlib1g-dev \
     libcurl4-openssl-dev \
-    git \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # PHP extensions
@@ -42,8 +38,7 @@ RUN docker-php-ext-install \
         opcache \
     && pecl install redis \
     && pecl install swoole --configureoptions="--enable-brotli=no --enable-openssl" \
-    && pecl install memcached \
-    && docker-php-ext-enable redis swoole memcached opcache
+    && docker-php-ext-enable redis swoole opcache
 
 # User & Group
 RUN groupmod -o -g ${GROUP_DOCKER_ID} www-data \

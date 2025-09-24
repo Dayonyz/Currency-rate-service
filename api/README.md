@@ -452,3 +452,59 @@ contacts ✓ [======================================] 0000/1800 VUs  7m0s
 ```
 
 Impossible mission - completed 😎
+
+P.P.S
+
+I was very unhappy with my decision to serialize Sanctum and its provider tokens. This overly simplistic solution resulted in corrupted restored Eloquent Models, which made my load tests unrealistic. So, I fixed this issue while maintaining the same service responsiveness. While solving this problem, I came across several interesting discoveries:
+1) Laravel's Sanctum uses the outdated and slower SHA256 token encryption algorithm, which I replaced with Blake2b with a shorter hash to speed up access checks under high load.
+2) When working with Octane, I discovered that accessing a frequently used singleton from service container was much slower than if I had placed its instance in a separate helper. The result was a 10x speedup.
+3) Model serialization and deserialization proved unjustified, so I found a more reliable and faster way to save the model in the cache and restore it from there. It's even better than creating a copy of the model using new Model()->forceFill().
+
+After all these changes and refactoring, I got more realistic results, and I'm happy with them. Now that's a happy end!!!
+
+**🔥 2316 RPS, avg HTTP request duration - 862ms, 1800 VUs load 🔥**
+
+```
+  █ THRESHOLDS 
+
+    checks
+    ✓ 'rate>0.95' rate=100.00%
+
+    http_req_duration
+    ✓ 'p(90)<3000' p(90)=862.14ms
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 973230  2316.56353/s
+    checks_succeeded...: 100.00% 973230 out of 973230
+    checks_failed......: 0.00%   0 out of 973230
+
+    ✓ User Journey - Login: GET current rate status is 200
+    ✓ User Journey - Login: GET rates first paginator, page 1 status is 200
+    ✓ User Journey - Random paginator: GET current rate status is 200
+    ✓ User Journey - Random paginator: GET rates random paginator, page 1 status is 200
+    ✓ User Journey - Random paginator: GET rates random paginator, random page status is 200
+
+    HTTP
+    http_req_duration..............: avg=632.96ms min=1.76ms   med=661.84ms max=1.9s  p(90)=862.14ms p(95)=942.05ms
+      { expected_response:true }...: avg=632.96ms min=1.76ms   med=661.84ms max=1.9s  p(90)=862.14ms p(95)=942.05ms
+    http_req_failed................: 0.00%  0 out of 973230
+    http_reqs......................: 973230 2316.56353/s
+
+    EXECUTION
+    iteration_duration.............: avg=4s       min=222.62ms med=4.32s    max=8.18s p(90)=4.99s    p(95)=5.18s   
+    iterations.....................: 162205 386.093922/s
+    vus............................: 8      min=8           max=1800
+    vus_max........................: 1800   min=1800        max=1800
+
+    NETWORK
+    data_received..................: 3.2 GB 7.7 MB/s
+    data_sent......................: 195 MB 465 kB/s
+
+
+
+
+running (7m00.1s), 0000/1800 VUs, 162205 complete and 0 interrupted iterations
+contacts ✓ [======================================] 0000/1800 VUs  7m0s
+```

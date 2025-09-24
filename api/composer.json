@@ -11,7 +11,8 @@
         "laravel/framework": "^11.31",
         "laravel/octane": "^2.12",
         "laravel/sanctum": "^4.0",
-        "spatie/laravel-responsecache": "^7.7"
+        "spatie/laravel-responsecache": "^7.7",
+        "ext-sodium": "*"
     },
     "require-dev": {
         "laravel/pail": "^1.1",

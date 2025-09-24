@@ -1,6 +1,6 @@
 serviceList=php nginx mysql redis queue-worker
-octaneServiceList=memcached php-worker mysql redis queue-worker
-preInstallOctaneServiceList=memcached php mysql redis queue-worker
+octaneServiceList=php-worker mysql redis-cache redis-queue queue-worker
+preInstallOctaneServiceList=php mysql redis-cache redis-queue queue-worker
 sshContainer=php
 sshOctaneContainer=php-worker
 mysqlContainer=mysql
@@ -202,15 +202,16 @@ install: ## Install Laravel for dev work
 		php artisan optimize"
 
 install-octane: ## Install Laravel with octane for dev work
-	docker rm -f currency-rates-fetching-mysql currency-rates-fetching-queue
-	docker rm -f api-php-worker-1 api-php-worker-2 api-php-worker-3 api-php-worker-4 currency-rates-fetching-haproxy
-	@make stop-octane
+	mutagen-compose down --rmi all --volumes --remove-orphans
+	docker rm -f $(docker ps -aq) || true
 	@sleep 3
 	docker volume rm -f api_db || true
 	docker volume rm -f api_code || true
-	docker volume rm -f api_db || true
-	docker volume rm -f api_redis || true
+	docker volume rm -f api_queue || true
+	docker volume rm -f api_cache || true
 	rm -rf .docker/mysql/volumes/*
+	rm -rf .docker/redis/queue/*
+	rm -rf .docker/redis/cache/*
 	rm -rf .docker/redis/data/*
 	@sleep 3
 	mutagen-compose -f docker-compose.octane.yml up -d $(preInstallOctaneServiceList)

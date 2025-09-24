@@ -32,10 +32,8 @@ RUN docker-php-ext-install \
         posix \
         opcache \
         && pecl install redis \
-        && docker-php-ext-enable redis
-
-RUN pecl install apcu \
-    && docker-php-ext-enable apcu opcache
+        && pecl install apcu \
+        && docker-php-ext-enable redis apcu opcache
 
 #Make User and Group
 RUN groupmod -o -g ${GROUP_DOCKER_ID} www-data && \

@@ -50,5 +50,7 @@ class ProjectFilesStats extends Command
         echo "Path: " . $directory . "\n";
         echo "Files count: " . $file_count . "\n";
         echo "Total size: " . $total_size . " bites\n";
+
+        print_r(hash_algos());
     }
 }

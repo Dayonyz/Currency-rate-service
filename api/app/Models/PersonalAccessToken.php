@@ -2,16 +2,16 @@
 
 namespace App\Models;
 
-use App\Services\CacheAccessTokensService;
+use App\Helpers\ContainerHelper;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Queue\SerializesAndRestoresModelIdentifiers;
-use Illuminate\Queue\SerializesModels;
 use Laravel\Sanctum\PersonalAccessToken as BaseToken;
 use Psr\SimpleCache\InvalidArgumentException;
+use SodiumException;
 
 class PersonalAccessToken extends BaseToken
 {
-    use SerializesModels, SerializesAndRestoresModelIdentifiers, SoftDeletes;
+    use SoftDeletes;
     /**
      * The attributes that should be hidden for serialization.
      *
@@ -25,7 +25,6 @@ class PersonalAccessToken extends BaseToken
      * @var array<int, string>
      */
     protected $fillable = [
-        'key',
         'name',
         'token',
         'abilities',
@@ -33,14 +32,14 @@ class PersonalAccessToken extends BaseToken
         'version'
     ];
 
-    protected static function boot(): void
+    private ?Model $cachedTokenAble = null;
+
+    protected static function boot()
     {
         parent::boot();
 
         static::deleting(function ($model) {
-            if (config('sanctum.cache')) {
-                app(CacheAccessTokensService::class)->deleteAccessTokenByKey($model->key);
-            }
+            ContainerHelper::getAccessTokenService()->deleteAccessTokenById($model->id);
         });
     }
 
@@ -49,15 +48,19 @@ class PersonalAccessToken extends BaseToken
      */
     public function getTokenableAttribute(): mixed
     {
-        if (config('sanctum.cache')) {
-            $instance = app(CacheAccessTokensService::class)->getTokenAbleByKey($this->key);
+        if ($this->cachedTokenAble) {
+            return $this->cachedTokenAble;
+        }
 
-            if ($instance &&
-                $instance->id === $this->tokenable_id &&
-                $instance::class === $this->tokenable_type
-            ) {
-                return $instance;
-            }
+        $tokenAble = ContainerHelper::getAccessTokenService()->getTokenAbleInstance($this->id);
+
+        if ($tokenAble &&
+            $tokenAble->id === $this->tokenable_id &&
+            $tokenAble::class === $this->tokenable_type
+        ) {
+            $this->cachedTokenAble = $tokenAble;
+
+            return $tokenAble;
         }
 
         return parent::tokenable()->first();
@@ -66,38 +69,70 @@ class PersonalAccessToken extends BaseToken
     /**
      * @param $token
      * @return PersonalAccessToken|null
-     * @throws InvalidArgumentException
+     * @throws InvalidArgumentException|SodiumException
      */
     public static function findToken($token): ?PersonalAccessToken
     {
-        if (!config('sanctum.cache') || !str_contains($token, '|')) {
-            return parent::findToken($token);
+        if (!str_contains($token, '|')) {
+            return static::findTokenFromDB($token);
         }
 
         [$id, $plainTextToken] = explode('|', $token, 2);
 
-        $key = CacheAccessTokensService::getKey($plainTextToken);
+        $accessToken = ContainerHelper::getAccessTokenService()->getAccessTokenInstance($id);
 
-        $cacheService = app(CacheAccessTokensService::class);
-        /**
-         * @var CacheAccessTokensService $cacheService
-         */
-        $instance = $cacheService->getAccessTokenByKey($key);
+        if ($accessToken &&
+            $accessToken->id === (int)$id &&
+            hash_equals($accessToken->token, sodium_bin2hex(sodium_crypto_generichash(
+                $plainTextToken,
+                '',
+                16
+            )))
+        ) {
+            $accessToken->version = hrtime(true);
 
-        if ($instance && $instance->id === (int)$id) {
-            $instance->version = (int)(microtime(true) * 1000000);
-            $cacheService->store($key, $instance);
+            ContainerHelper::getAccessTokenService()->storeAccessToken($accessToken);
 
-            return $instance;
+            return $accessToken;
         }
 
-        $instance = parent::findToken($token);
+        $accessToken = static::findTokenFromDB($token);
 
-        if (config('sanctum.cache') && $instance) {
-            $instance->version = (int)(microtime(true) * 1000000);
-            $cacheService->store($key, $instance);
+        if ($accessToken) {
+            $accessToken->version = hrtime(true);
+            ContainerHelper::getAccessTokenService()->storeAccessToken($accessToken);
         }
 
-        return $instance;
+        return $accessToken;
+    }
+
+    /**
+     * Find the token instance matching the given token.
+     *
+     * @param string $token
+     * @return PersonalAccessToken|null
+     * @throws SodiumException
+     */
+    public static function findTokenFromDB(string $token): ?static
+    {
+        if (!str_contains($token, '|')) {
+            return static::where('token', sodium_bin2hex(sodium_crypto_generichash(
+                $token,
+                '',
+                16
+            )))->first();
+        }
+
+        [$id, $plainTextToken] = explode('|', $token, 2);
+
+        if ($instance = static::find($id)) {
+            return hash_equals($instance->token, sodium_bin2hex(sodium_crypto_generichash(
+                $plainTextToken,
+                '',
+                16
+            ))) ? $instance : null;
+        }
+
+        return null;
     }
 }

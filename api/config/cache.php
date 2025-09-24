@@ -79,6 +79,21 @@ return [
             'connection' => 'cache',
         ],
 
+        'redis-sanctum' => [
+            'driver' => 'redis',
+            'connection' => 'cache-sanctum',
+        ],
+
+        'redis-repository' => [
+            'driver' => 'redis',
+            'connection' => 'cache-repository',
+        ],
+
+        'redis-response' => [
+            'driver' => 'redis',
+            'connection' => 'cache-response',
+        ],
+
         'dynamodb' => [
             'driver' => 'dynamodb',
             'key' => env('AWS_ACCESS_KEY_ID'),

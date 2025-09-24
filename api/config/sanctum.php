@@ -63,7 +63,7 @@ return [
 
     'token_prefix' => env('SANCTUM_TOKEN_PREFIX', ''),
 
-    'cache' => env('SANCTUM_CACHE_DRIVER', null),
+    'cache' => env('SANCTUM_CACHE_STORE', null),
 
     /*
     |--------------------------------------------------------------------------

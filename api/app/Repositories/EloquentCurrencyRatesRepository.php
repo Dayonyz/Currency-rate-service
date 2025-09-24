@@ -25,6 +25,11 @@ class EloquentCurrencyRatesRepository implements CurrencyRatesRepository
         $this->cache = $cache;
     }
 
+    protected function getPrefixKey(string $currency, string $baseCurrency): string
+    {
+        return 'currency_rates:' . $currency . '_' . $baseCurrency;
+    }
+
     /**
      * @throws Exception
      */
@@ -53,7 +58,7 @@ class EloquentCurrencyRatesRepository implements CurrencyRatesRepository
     public function getLatestRate(CurrenciesEnum $currency, CurrenciesEnum $baseCurrency): ?array
     {
         if ($this->cache) {
-            $cacheKey = "{$currency->name}_{$baseCurrency->name}:rate_latest";
+            $cacheKey = $this->getPrefixKey($currency->name, $baseCurrency->name) . ':rate_latest';
 
             $rate = $this->cache->remember(
                 $cacheKey,
@@ -106,7 +111,8 @@ class EloquentCurrencyRatesRepository implements CurrencyRatesRepository
         $query->limit($limit);
 
         if ($this->cache) {
-            $cacheKey = "{$currency->name}_{$baseCurrency->name}:rates_paginate_{$limit}_{$page}";
+            $cacheKey = $this->getPrefixKey($currency->name, $baseCurrency->name) .
+                ":rates_paginate:" . $limit . "_" . $page;
 
             $rates = $this->cache->remember(
                 $cacheKey,
@@ -131,7 +137,7 @@ class EloquentCurrencyRatesRepository implements CurrencyRatesRepository
     public function getRatesTotalCount(CurrenciesEnum $currency, CurrenciesEnum $base): int
     {
         if ($this->cache) {
-            $cacheKey = "{$currency->name}_{$base->name}:rates_count";
+            $cacheKey = $this->getPrefixKey($currency->name, $base->name) . ":rates_count";
 
             $itemsCount = $this->cache->remember(
                 $cacheKey,

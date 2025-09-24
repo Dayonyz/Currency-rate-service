@@ -2,20 +2,20 @@
 
 namespace App\Models;
 
+use App\Helpers\ContainerHelper;
 use App\Services\CacheAccessTokensService;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Queue\SerializesAndRestoresModelIdentifiers;
-use Illuminate\Queue\SerializesModels;
 use Laravel\Sanctum\HasApiTokens;
 use Laravel\Sanctum\NewAccessToken;
+use SodiumException;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasApiTokens, SerializesModels, SerializesAndRestoresModelIdentifiers;
+    use HasFactory, Notifiable, HasApiTokens;
 
     /**
      * The attributes that are mass assignable.
@@ -51,28 +51,32 @@ class User extends Authenticatable
         ];
     }
 
+    /**
+     * @throws SodiumException
+     */
     public function createToken(
         string $name,
         array $abilities = ['*'],
         ?DateTimeInterface $expiresAt = null
     ): NewAccessToken {
         $plainTextToken = $this->generateTokenString();
-        $version = (int) (microtime(true) * 1000000);
-        $key = CacheAccessTokensService::getKey($plainTextToken);
 
         $token = $this->tokens()->create([
             'name' => $name,
-            'token' => hash('sha256', $plainTextToken),
+            'token' =>  sodium_bin2hex(sodium_crypto_generichash(
+                $plainTextToken,
+                '',
+                16
+            )),
             'abilities' => $abilities,
             'expires_at' => $expiresAt,
-            'version' => $version,
-            'key' => $key
+            'version' => hrtime(true),
         ]);
 
         $fullToken = $token->getKey() . '|' . $plainTextToken;
 
         if (config('sanctum.cache')) {
-            app(CacheAccessTokensService::class)->store($key, $token, $this);
+            ContainerHelper::getAccessTokenService()->storeAccessTokenAndProvider($token, $this);
         }
 
         return new NewAccessToken($token, $fullToken);

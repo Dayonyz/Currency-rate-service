@@ -21,7 +21,7 @@ class SanctumServiceProvider extends ServiceProvider
             $this->configureGuard();
 
             $this->app->singleton(CacheAccessTokensService::class, function () {
-                return new CacheAccessTokensService(Cache::driver(config('sanctum.cache')));
+                return new CacheAccessTokensService(Cache::store(config('sanctum.cache')));
             });
         }
     }
@@ -52,5 +52,4 @@ class SanctumServiceProvider extends ServiceProvider
             $auth->createUserProvider($config['provider'] ?? null)
         );
     }
-
 }

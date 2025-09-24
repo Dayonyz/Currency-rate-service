@@ -12,7 +12,7 @@ return [
             sort($array);
         }),
         'cache' => [
-            'driver' => env('REPOSITORY_CACHE_DRIVER', 'redis'),
+            'store' => env('REPOSITORY_CACHE_STORE'),
             'ttl' => env('REPOSITORY_CACHE_TTL', 24*60*60),
         ],
     ],

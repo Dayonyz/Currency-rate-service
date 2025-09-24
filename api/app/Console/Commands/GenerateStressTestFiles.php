@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Enums\CurrenciesEnum;
 use App\Models\User;
 use App\Repositories\Contracts\CurrencyRatesRepository;
+use App\Services\CacheAccessTokensService;
 use App\Services\K6StressTestService;
 use Illuminate\Console\Command;
 
