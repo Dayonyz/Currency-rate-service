@@ -52,7 +52,6 @@ class HashPerformanceTest extends Command
         echo 'App key length:' . strlen(config('app.key')) . "\n";
         echo "------------------------------------------------" . "\n";
 
-        var_dump($accessToken->created_at->timestamp);
         $keyPassed = $accessToken->id . substr($accessToken->token, -16) . $accessToken->created_at->timestamp;
         $valuePassed = $accessToken->created_at->timestamp . $accessToken->id . substr($accessToken->token, 0, 16);
 
@@ -79,7 +78,6 @@ class HashPerformanceTest extends Command
         echo "Last hash: " . $hash . "\n";
         echo "Hash length: " . strlen($hash) . "\n";
         echo "---------------------------" . "\n";
-
 
         $start = hrtime(true);
         foreach ($tokens as $token) {
