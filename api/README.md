@@ -466,7 +466,7 @@ So final changes are:
 - CacheAccessTokensService retrieved once in App\Helpers\ContainerHelper
 - Memcached is totally removed
 - All caches placed into different Redis DBs on the same instance
-- Separate Redis instance raised for async tokens update queues
+- A separate Redis instance is created for async updates of tokens from queues
 
 After all these changes and refactoring, I got more realistic and even better results, and I'm happy with them. Now that's a happy end!!!
 
