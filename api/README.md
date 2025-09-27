@@ -460,6 +460,14 @@ I was very unhappy with my decision to serialize Sanctum and its provider tokens
 2) When working with Octane, I discovered that accessing a frequently used singleton from service container was much slower than if I had placed its instance in a separate helper. The result was a 10x speedup.
 3) Model serialization and deserialization proved unjustified, so I found a more reliable and faster way to save the model in the cache and restore it from there. It's even better than creating a copy of the model using new Model()->forceFill().
 
+So final changes are:
+- PersonalAccessToken hash algorithm changed from SHA256 to Blake2b
+- Sanctum tokens serialize-unserialize replaced via store-restore functions in App\Services\CacheAccessTokensService
+- CacheAccessTokensService retrieved once in App\Helpers\ContainerHelper
+- Memcached is totally removed
+- All caches placed into different Redis DBs on the same instance
+- Separate Redis instance raised for async tokens update queues
+
 After all these changes and refactoring, I got more realistic and even better results, and I'm happy with them. Now that's a happy end!!!
 
 **🔥 2467 RPS, avg HTTP request duration - 798ms, 1800 VUs load 🔥**

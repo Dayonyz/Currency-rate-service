@@ -16,20 +16,17 @@ use Illuminate\Contracts\Cache\Repository as CacheInterface;
 class EloquentCurrencyRatesRepository implements CurrencyRatesRepository
 {
     private int $limit;
+    private array $limits;
+    private int $ttl;
     private ?CacheInterface $cache;
 
     public function __construct(?CacheInterface $cache)
     {
-        $this->limit = min(config('repository.eloquent.limits'));
-
         $this->cache = $cache;
+        $this->limits = config('repository.eloquent.limits');
+        $this->limit = min($this->limits);
+        $this->ttl = config('repository.eloquent.cache.ttl');
     }
-
-    protected function getPrefixKey(string $currency, string $baseCurrency): string
-    {
-        return 'currency_rates:' . $currency . '_' . $baseCurrency;
-    }
-
     /**
      * @throws Exception
      */
@@ -57,22 +54,23 @@ class EloquentCurrencyRatesRepository implements CurrencyRatesRepository
     #[ArrayShape(['currency' => "array", 'base_currency' => "array", 'rate' => "mixed", 'actual_at' => "mixed"])]
     public function getLatestRate(CurrenciesEnum $currency, CurrenciesEnum $baseCurrency): ?array
     {
+        $response = fn() => CurrencyRateResource::make(
+            Rate::byPairIso($currency ,$baseCurrency)
+                ->latest('id')
+                ->first()
+        )->toArray(request());
+
         if ($this->cache) {
-            $cacheKey = $this->getPrefixKey($currency->name, $baseCurrency->name) . ':rate_latest';
-
             $rate = $this->cache->remember(
-                $cacheKey,
-                config('repository.eloquent.cache.ttl'),
-                function () use ($currency, $baseCurrency) {
-                    $latest = Rate::byPairIso($currency ,$baseCurrency)
-                        ->latest('id')
-                        ->first();
-
-                    return CurrencyRateResource::make($latest)->toArray(request());
-                });
+                'currency_rates:' . $currency->name . '_' . $baseCurrency->name . ':rate_latest',
+                $this->ttl,
+                $response
+            );
 
             if (empty($rate)) {
-                $this->cache->forget($cacheKey);
+                $this->cache->forget(
+                    'currency_rates:' . $currency->name . '_' . $baseCurrency->name . ':rate_latest'
+                );
 
                 return [];
             } else {
@@ -80,11 +78,7 @@ class EloquentCurrencyRatesRepository implements CurrencyRatesRepository
             }
         }
 
-        $rate = Rate::byPairIso($currency ,$baseCurrency)
-            ->latest('id')
-            ->first();
-
-        return $rate ? CurrencyRateResource::make($rate)->toArray(request()) : null;
+        return $response();
     }
 
     /**
@@ -96,7 +90,7 @@ class EloquentCurrencyRatesRepository implements CurrencyRatesRepository
         ?int $limit = null,
         ?int $page = null
     ): array {
-        $limit = $this->normalizeLimit($limit);
+        $this->normalizeLimit($limit);
         $page = $page ?: 1;
         $sort = 'desc';
 
@@ -105,75 +99,76 @@ class EloquentCurrencyRatesRepository implements CurrencyRatesRepository
             ->orderBy('actual_at', $sort);
 
         if ($page > 1) {
-            $query->offset(($page - 1) * $limit);
+            $query->offset(($page - 1) * $this->limit);
         }
 
-        $query->limit($limit);
+        $query->limit($this->limit);
+
+        $response = fn() => CurrencyRateResource::collection($query->get())->toArray(request());
 
         if ($this->cache) {
-            $cacheKey = $this->getPrefixKey($currency->name, $baseCurrency->name) .
-                ":rates_paginate:" . $limit . "_" . $page;
-
             $rates = $this->cache->remember(
-                $cacheKey,
-                config('repository.eloquent.cache.ttl'),
-                fn() => CurrencyRateResource::collection($query->get())->toArray(request())
+                'currency_rates:' . $currency->name . '_' . $baseCurrency->name .
+                ':rates_paginate:' . $this->limit . '_' . $page,
+                $this->ttl,
+                $response
             );
 
             if (empty($rates)) {
-                $this->cache->forget($cacheKey);
+                $this->cache->forget(
+                    'currency_rates:' . $currency->name . '_' . $baseCurrency->name .
+                    ':rates_paginate:' . $this->limit . '_' . $page
+                );
+
                 return [];
             }
 
             return $rates;
         }
 
-        return CurrencyRateResource::collection($query->get())->toArray(request());
+        return $response();
     }
 
     /**
      * @throws InvalidArgumentException
      */
-    public function getRatesTotalCount(CurrenciesEnum $currency, CurrenciesEnum $base): int
+    public function getRatesTotalCount(CurrenciesEnum $currency, CurrenciesEnum $baseCurrency): int
     {
-        if ($this->cache) {
-            $cacheKey = $this->getPrefixKey($currency->name, $base->name) . ":rates_count";
+        $response = fn() => Rate::byPairIso($currency, $baseCurrency)->count();
 
+        if ($this->cache) {
             $itemsCount = $this->cache->remember(
-                $cacheKey,
-                config('repository.eloquent.cache.ttl'),
-                function () use ($currency, $base) {
-                    return Rate::byPairIso($currency, $base)->count();
-                });
+                'currency_rates:' . $currency->name . '_' . $baseCurrency->name . ':rates_count',
+                $this->ttl,
+                $response
+            );
 
             if ($itemsCount === 0) {
-                $this->cache->forget($cacheKey);
+                $this->cache->forget(
+                    'currency_rates:' . $currency->name . '_' . $baseCurrency->name . ':rates_count'
+                );
             }
 
             return $itemsCount;
         }
 
-        return Rate::byPairIso($currency, $base)->count();
+        return $response();
     }
 
-    private function normalizeLimit(?int $limit): int
+    private function normalizeLimit(?int $limit): void
     {
         if (is_null($limit) || $limit <= $this->limit) {
-            return $this->limit;
+            return;
         }
 
-        $limits = config('repository.eloquent.limits');
-
-        foreach ($limits as $allowedLimit) {
+        foreach ($this->limits as $allowedLimit) {
             if ($limit <= $allowedLimit) {
                 $this->limit = $allowedLimit;
 
-                return $this->limit;
+                return;
             }
         }
 
-        $this->limit = max($limits);
-
-        return $this->limit;
+        $this->limit = max($this->limits);
     }
 }

@@ -22,6 +22,6 @@ interface CurrencyRatesRepository
 
     public function getRatesTotalCount(
         CurrenciesEnum $currency,
-        CurrenciesEnum $base,
+        CurrenciesEnum $baseCurrency,
     ): int;
 }

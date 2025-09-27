@@ -2,7 +2,6 @@
 
 namespace App\Console\Commands;
 
-use App\Models\PersonalAccessToken;
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
 use SodiumException;
@@ -29,12 +28,6 @@ class HashPerformanceTest extends Command
      */
     public function handle()
     {
-        /**
-         * @var PersonalAccessToken $accessToken
-         */
-        $accessToken = PersonalAccessToken::first();
-        $appKey = config('app.key');
-
         $tokens = [];
 
         for ($i = 0; $i < 100000; $i++) {
@@ -47,37 +40,11 @@ class HashPerformanceTest extends Command
         }
 
         echo 'First token: ' . $tokens[0] . "\n";
-        echo 'First token length: ' . strlen($tokens[0]) . "\n";
+        echo 'Token length: ' . strlen($tokens[0]) . "\n";
         echo 'App key:' . config('app.key') . "\n";
         echo 'App key length:' . strlen(config('app.key')) . "\n";
+        echo "Current system is 64-bit: " . (int)(PHP_INT_SIZE >= 8 || PHP_INT_MAX > 0x7fffffff). "\n";
         echo "------------------------------------------------" . "\n";
-
-        $keyPassed = $accessToken->id . substr($accessToken->token, -16) . $accessToken->created_at->timestamp;
-        $valuePassed = $accessToken->created_at->timestamp . $accessToken->id . substr($accessToken->token, 0, 16);
-
-        $start = hrtime(true);
-        foreach ($tokens as $token) {
-            $hash = hash('xxh64', $keyPassed);
-        }
-        $end = hrtime(true);
-
-        echo "xxh64 Composite Key: " . round(($end-$start)/(1000*1000), 2) . "\n";
-        echo 'last: ' . substr($accessToken->token, -16) . "\n";
-        echo "Last hash: " . $hash . "\n";
-        echo "Hash length: " . strlen($hash) . "\n";
-        echo "---------------------------" . "\n";
-
-        $start = hrtime(true);
-        foreach ($tokens as $token) {
-            $hash = hash('xxh3', $valuePassed);
-        }
-        $end = hrtime(true);
-
-        echo "xxh3 Composite Value: " . round(($end-$start)/(1000*1000), 2) . "\n";
-        echo 'first: ' . substr($accessToken->token, 0, 16) . "\n";
-        echo "Last hash: " . $hash . "\n";
-        echo "Hash length: " . strlen($hash) . "\n";
-        echo "---------------------------" . "\n";
 
         $start = hrtime(true);
         foreach ($tokens as $token) {
@@ -226,7 +193,5 @@ class HashPerformanceTest extends Command
         echo "Last hash: " . $hash . "\n";
         echo "Hash length: " . strlen($hash) . "\n";
         echo "---------------------------" . "\n";
-
-        echo "Current system is 64-bit: " . (int)(PHP_INT_SIZE >= 8 || PHP_INT_MAX > 0x7fffffff). "\n";
     }
 }

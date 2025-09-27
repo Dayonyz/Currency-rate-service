@@ -2,7 +2,7 @@
 
 namespace App\Providers;
 
-use App\Helpers\ContainerHelper;
+use App\Helpers\TokensContainerHelper;
 use App\Repositories\Contracts\CurrencyRatesRepository;
 use App\Repositories\EloquentCurrencyRatesRepository;
 use App\Services\CacheAccessTokensService;
@@ -36,6 +36,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        ContainerHelper::useCacheAccessTokensService($this->app->make(CacheAccessTokensService::class));
+        TokensContainerHelper::useCacheAccessTokensService($this->app->make(CacheAccessTokensService::class));
     }
 }

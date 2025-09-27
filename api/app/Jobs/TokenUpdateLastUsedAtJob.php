@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Helpers\ContainerHelper;
+use App\Helpers\TokensContainerHelper;
 use App\Models\PersonalAccessToken;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -27,7 +27,7 @@ class TokenUpdateLastUsedAtJob implements ShouldQueue
      */
     public function handle()
     {
-        $tokenModel = ContainerHelper::getAccessTokenService()->restoreAccessTokenFromRawOriginal($this->rawOriginal);
+        $tokenModel = TokensContainerHelper::getAccessTokenService()->restoreAccessTokenFromRawOriginal($this->rawOriginal);
 
         if (method_exists($tokenModel->getConnection(), 'hasModifiedRecords') &&
             method_exists($tokenModel->getConnection(), 'setRecordModificationState')) {
@@ -45,7 +45,7 @@ class TokenUpdateLastUsedAtJob implements ShouldQueue
      */
     private function saveToken(PersonalAccessToken $jobTokenModel): void
     {
-        $cacheTokenModel = ContainerHelper::getAccessTokenService()->getAccessTokenInstance($jobTokenModel->id);
+        $cacheTokenModel = TokensContainerHelper::getAccessTokenService()->getAccessTokenInstance($jobTokenModel->id);
 
         if ($cacheTokenModel) {
             if ($jobTokenModel->version >= $cacheTokenModel->version) {

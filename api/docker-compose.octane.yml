@@ -42,7 +42,7 @@ services:
             - ./.docker/php-swoole/php.ini:/usr/local/etc/php/php.ini
             - code:${DOCKER_CODE_FOLDER}:delegated
         working_dir: ${DOCKER_CODE_FOLDER}
-        #command: php artisan octane:start --server=swoole --host=0.0.0.0 --port=8000 --workers=8 --task-workers=4 --max-requests=4500 --log-level=debug >> /proc/1/fd/1 2>&1
+        #command: php artisan octane:start --server=swoole --host=0.0.0.0 --port=8000 --workers=16 --task-workers=4 --max-requests=5400 --log-level=debug >> /proc/1/fd/1 2>&1
         command: php artisan octane:start --server=swoole --host=0.0.0.0 --port=8000 --workers=16 --task-workers=4 --max-requests=5400
         depends_on:
             mysql:
@@ -63,18 +63,6 @@ services:
             timeout: 2s
             retries: 5
             start_period: 5s
-#    haproxy:
-#        image: haproxy:2.9
-#        container_name: "${DOCKER_APP_SLUG}-haproxy"
-#        ports:
-#            - "${DOCKER_NGINX_PORT}:80"
-#        volumes:
-#            - ./.docker/haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
-#        networks:
-#            - backend-octane
-#        depends_on:
-#            php-worker:
-#                condition: service_healthy
     mysql:
         image: mysql:8.0
         container_name: "${DOCKER_APP_SLUG}-mysql"

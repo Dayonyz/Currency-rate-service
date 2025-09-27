@@ -4,7 +4,7 @@ namespace App\Helpers;
 
 use App\Services\CacheAccessTokensService;
 
-class ContainerHelper
+class TokensContainerHelper
 {
     protected static ?CacheAccessTokensService $cacheAccessTokensService = null;
 
@@ -15,7 +15,7 @@ class ContainerHelper
 
     public static function getAccessTokenService(): CacheAccessTokensService
     {
-        if (!static::$cacheAccessTokensService) {
+        if (! static::$cacheAccessTokensService) {
             static::useCacheAccessTokensService(app(CacheAccessTokensService::class));
         }
 

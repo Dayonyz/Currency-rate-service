@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Helpers\ContainerHelper;
+use App\Helpers\TokensContainerHelper;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -36,6 +36,16 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
+
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::deleted(function (User $model) {
+            $model->tokens()->delete();
+        });
+    }
 
     /**
      * Get the attributes that should be cast.
@@ -72,10 +82,10 @@ class User extends Authenticatable
             'version' => hrtime(true),
         ]);
 
-        $fullToken = $token->getKey() . '|' . $plainTextToken;
+        $fullToken = $token->id . '|' . $plainTextToken;
 
         if (config('sanctum.cache')) {
-            ContainerHelper::getAccessTokenService()->storeAccessTokenAndProvider($token, $this);
+            TokensContainerHelper::getAccessTokenService()->storeAccessTokenAndProvider($token, $this);
         }
 
         return new NewAccessToken($token, $fullToken);

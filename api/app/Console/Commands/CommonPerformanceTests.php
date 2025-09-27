@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Helpers\ContainerHelper;
+use App\Helpers\TokensContainerHelper;
 use App\Models\PersonalAccessToken;
 use App\Services\CacheAccessTokensService;
 use Illuminate\Console\Command;
@@ -33,7 +33,7 @@ class CommonPerformanceTests extends Command
         echo "---------------------------" . "\n";
 
         $cacheService = app(CacheAccessTokensService::class);
-        ContainerHelper::useCacheAccessTokensService($cacheService);
+        TokensContainerHelper::useCacheAccessTokensService($cacheService);
 
         $start = hrtime(true);
         for ($i = 0; $i < 100000; $i++) {
@@ -47,13 +47,12 @@ class CommonPerformanceTests extends Command
 
         $start = hrtime(true);
         for ($i = 0; $i < 100000; $i++) {
-            $cacheService = ContainerHelper::getAccessTokenService();
+            $cacheService = TokensContainerHelper::getAccessTokenService();
         }
         $end = hrtime(true);
 
         echo "Get instance from helper container: " . round(($end-$start)/(1000*1000), 2) . "\n";
         echo "---------------------------" . "\n";
-
 
         /**
          * @var PersonalAccessToken $token
@@ -79,6 +78,25 @@ class CommonPerformanceTests extends Command
         $end = hrtime(true);
 
         echo "Create Model from prepared instance: " . round(($end-$start)/(1000*1000), 2) . "\n";
+        echo "---------------------------" . "\n";
+
+
+        $start = hrtime(true);
+        for ($i = 0; $i < 10000; $i++) {
+            TokensContainerHelper::getAccessTokenService()->getAccessTokenWithProvider(12);
+        }
+        $end = hrtime(true);
+
+        echo "Find from helper: " . round(($end-$start)/(1000*1000), 2) . "\n";
+        echo "---------------------------" . "\n";
+
+        $start = hrtime(true);
+        for ($i = 0; $i < 10000; $i++) {
+            app(CacheAccessTokensService::class)->getAccessTokenWithProvider(12);
+        }
+        $end = hrtime(true);
+
+        echo "Find from app container: " . round(($end-$start)/(1000*1000), 2) . "\n";
         echo "---------------------------" . "\n";
     }
 }
