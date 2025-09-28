@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Helpers\TokensContainerHelper;
 use App\Models\PersonalAccessToken;
+use App\Services\CacheAccessTokensService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -15,6 +16,7 @@ class TokenUpdateLastUsedAtJob implements ShouldQueue
 
     public array $rawOriginal;
     public string $now;
+    private CacheAccessTokensService $accessTokensService;
 
     public function __construct(array $rawOriginal, string $now)
     {
@@ -27,7 +29,9 @@ class TokenUpdateLastUsedAtJob implements ShouldQueue
      */
     public function handle()
     {
-        $tokenModel = TokensContainerHelper::getAccessTokenService()->restoreAccessTokenFromRawOriginal($this->rawOriginal);
+        $this->accessTokensService = TokensContainerHelper::getAccessTokenService();
+
+        $tokenModel = $this->accessTokensService::restoreAccessTokenFromRawOriginal($this->rawOriginal);
 
         if (method_exists($tokenModel->getConnection(), 'hasModifiedRecords') &&
             method_exists($tokenModel->getConnection(), 'setRecordModificationState')) {
@@ -45,7 +49,7 @@ class TokenUpdateLastUsedAtJob implements ShouldQueue
      */
     private function saveToken(PersonalAccessToken $jobTokenModel): void
     {
-        $cacheTokenModel = TokensContainerHelper::getAccessTokenService()->getAccessTokenInstance($jobTokenModel->id);
+        $cacheTokenModel = $this->accessTokensService->getAccessTokenInstance($jobTokenModel->id);
 
         if ($cacheTokenModel) {
             if ($jobTokenModel->version >= $cacheTokenModel->version) {
@@ -59,7 +63,7 @@ class TokenUpdateLastUsedAtJob implements ShouldQueue
 
             if ($dbTokenModel) {
                 if ($jobTokenModel->version >= $dbTokenModel->version) {
-                    $jobTokenModel->forceFill([
+                    $dbTokenModel->forceFill([
                         'last_used_at' => $this->now,
                         'version' => $jobTokenModel->version
                     ])->save();

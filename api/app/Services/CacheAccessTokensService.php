@@ -11,17 +11,17 @@ use Psr\SimpleCache\InvalidArgumentException;
 class CacheAccessTokensService
 {
     private CacheInterface $cache;
-    private PersonalAccessToken $preparedToken;
-    private User $preparedUser;
+    private static PersonalAccessToken $preparedToken;
+    private static User $preparedUser;
 
     public function __construct(CacheInterface $cache)
     {
         $this->cache = $cache;
-        $this->preparedToken = (new PersonalAccessToken)->setConnection(config('database.default'));
-        $this->preparedToken->exists = true;
+        static::$preparedToken = (new PersonalAccessToken)->setConnection(config('database.default'));
+        static::$preparedToken->exists = true;
 
-        $this->preparedUser = (new User)->setConnection(config('database.default'));
-        $this->preparedUser->exists = true;
+        static::$preparedUser = (new User)->setConnection(config('database.default'));
+        static::$preparedUser->exists = true;
     }
 
     public function storeAccessTokenAndProvider(PersonalAccessToken $token, Model $tokenAble): void
@@ -68,9 +68,9 @@ class CacheAccessTokensService
         }
     }
 
-    public function restoreAccessTokenFromRawOriginal(array $rawOriginal): PersonalAccessToken
+    public static function restoreAccessTokenFromRawOriginal(array $rawOriginal): PersonalAccessToken
     {
-        return (clone $this->preparedToken)->setRawAttributes($rawOriginal)->syncOriginal();
+        return (clone static::$preparedToken)->setRawAttributes($rawOriginal)->syncOriginal();
     }
 
     /**
@@ -85,11 +85,11 @@ class CacheAccessTokensService
             return null;
         }
 
-        return (clone $this->preparedToken)
+        return (clone static::$preparedToken)
             ->setRawAttributes(unserialize($rawOriginalToken))
             ->setRelation(
                 'tokenable',
-                (clone $this->preparedUser)->setRawAttributes(unserialize($rawOriginalProvider))->syncOriginal()
+                (clone static::$preparedUser)->setRawAttributes(unserialize($rawOriginalProvider))->syncOriginal()
             )
             ->syncOriginal();
     }
@@ -105,7 +105,7 @@ class CacheAccessTokensService
             return null;
         }
 
-        return (clone $this->preparedToken)->setRawAttributes(unserialize($rawOriginal))->syncOriginal();
+        return (clone static::$preparedToken)->setRawAttributes(unserialize($rawOriginal))->syncOriginal();
     }
 
     /**
