@@ -455,7 +455,7 @@ Impossible mission - completed 😎
 
 P.P.S
 
-I was very unhappy with my decision to serialize Sanctum and its provider tokens. This overly simplistic solution resulted in corrupted restored Eloquent Models, which made my load tests unrealistic. So, I fixed this issue while maintaining the same service responsiveness. While solving this problem, I came across several interesting discoveries:
+I was very unhappy with my decision to serialize Sanctum and its provider tokens. This overly simplistic solution resulted in corrupted restored Eloquent Models, which made my load tests unrealistic. So, I fixed this issue, even improving the service responsiveness. While solving this problem, I came across several interesting discoveries:
 1) Laravel's Sanctum uses the outdated and slower SHA256 token encryption algorithm, which I replaced with Blake2b with a shorter hash to speed up access checks under high load.
 2) When working with Octane, I discovered that accessing a frequently used singleton from service container was much slower than if I had placed its instance in a separate helper. The result was a 10x speedup.
 3) Model serialization and deserialization proved unjustified, so I found a more reliable and faster way to save the model in the cache and restore it from there. It's even better than creating a copy of the model using new Model()->forceFill().
