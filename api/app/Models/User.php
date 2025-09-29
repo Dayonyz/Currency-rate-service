@@ -79,7 +79,6 @@ class User extends Authenticatable
             )),
             'abilities' => $abilities,
             'expires_at' => $expiresAt,
-            'version' => hrtime(true),
         ]);
 
         $fullToken = $token->id . '|' . $plainTextToken;

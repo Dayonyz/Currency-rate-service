@@ -52,6 +52,18 @@ class CacheAccessTokensService
         }
     }
 
+    public function storeAccessTokenEloquent(PersonalAccessToken $token): void
+    {
+        $this->cache->forever(
+            "sanctum_auth:token:db:" . $token->id,
+            serialize(array_filter(
+                $token->getChanges(),
+                fn($k) => ! in_array($k, ['version', 'last_used_at']),
+                ARRAY_FILTER_USE_KEY
+            )),
+        );
+    }
+
     public function storeAccessToken(PersonalAccessToken $token): void
     {
         if ($token->expires_at) {
@@ -80,13 +92,35 @@ class CacheAccessTokensService
     {
         $rawOriginalToken = $this->cache->get("sanctum_auth:token:" . $id);
         $rawOriginalProvider = $this->cache->get("sanctum_auth:tokenable:" . $id);
+        $tokenFromDb = $this->cache->get("sanctum_auth:token:db:" . $id);
 
         if (! $rawOriginalToken || ! $rawOriginalProvider) {
             return null;
         }
 
-        return (clone static::$preparedToken)
-            ->setRawAttributes(unserialize($rawOriginalToken))
+        if ($tokenFromDb) {
+            $tokenFromDb = unserialize($tokenFromDb);
+            $this->cache->delete("sanctum_auth:token:db:" . $id);
+
+            return (clone static::$preparedToken)
+                ->setRawAttributes(
+                    array_merge(
+                        array_filter(
+                            unserialize($rawOriginalToken),
+                            fn($k) => empty($tokenFromDb[$k]),
+                            ARRAY_FILTER_USE_KEY
+                        ),
+                        $tokenFromDb
+                    )
+                )
+                ->setRelation(
+                    'tokenable',
+                    (clone static::$preparedUser)->setRawAttributes(unserialize($rawOriginalProvider))->syncOriginal()
+                )
+                ->syncOriginal();
+        }
+
+        return (clone static::$preparedToken)->setRawAttributes(unserialize($rawOriginalToken))
             ->setRelation(
                 'tokenable',
                 (clone static::$preparedUser)->setRawAttributes(unserialize($rawOriginalProvider))->syncOriginal()
@@ -97,7 +131,7 @@ class CacheAccessTokensService
     /**
      * @throws InvalidArgumentException
      */
-    public function getAccessTokenInstance(int $id): ?PersonalAccessToken
+    public function getAccessToken(int $id): ?PersonalAccessToken
     {
         $rawOriginal = $this->cache->get("sanctum_auth:token:" . $id);
 

@@ -21,7 +21,6 @@ class PersonalAccessToken extends BaseToken
         'name',
         'token',
         'abilities',
-        'version',
         'expires_at'
     ];
 
@@ -31,6 +30,15 @@ class PersonalAccessToken extends BaseToken
 
         static::deleted(function ($model) {
             TokensContainerHelper::getAccessTokenService()->deleteAccessTokenById($model->id);
+        });
+
+        static::updated(function ($model) {
+            if (! empty(array_diff_assoc(
+                array_count_values(array_keys($model->getChanges())),
+                ['version' => 1, 'last_used_at' => 1]
+            ))) {
+                TokensContainerHelper::getAccessTokenService()->storeAccessTokenEloquent($model);
+            }
         });
     }
 
@@ -47,6 +55,9 @@ class PersonalAccessToken extends BaseToken
 
         [$id, $plainTextToken] = explode('|', $token, 2);
 
+        /**
+         * @var PersonalAccessToken $accessToken
+         */
         $accessToken = TokensContainerHelper::getAccessTokenService()->getAccessTokenWithProvider($id);
 
         if ($accessToken &&
@@ -57,16 +68,18 @@ class PersonalAccessToken extends BaseToken
                 16
             )))
         ) {
-            $accessToken->version = hrtime(true);
+            $accessToken->original['version'] = hrtime(true);
             TokensContainerHelper::getAccessTokenService()->storeAccessToken($accessToken);
 
             return $accessToken;
+        } else if ($accessToken) {
+            TokensContainerHelper::getAccessTokenService()->deleteAccessTokenById($accessToken->id);
         }
 
         $accessToken = static::findTokenFromDB($id, $plainTextToken);
 
         if ($accessToken) {
-            $accessToken->version = hrtime(true);
+            $accessToken->original['version'] = hrtime(true);
             TokensContainerHelper::getAccessTokenService()->storeAccessToken($accessToken);
         }
 

@@ -30,7 +30,6 @@ class TokenUpdateLastUsedAtJob implements ShouldQueue
     public function handle()
     {
         $this->accessTokensService = TokensContainerHelper::getAccessTokenService();
-
         $tokenModel = $this->accessTokensService::restoreAccessTokenFromRawOriginal($this->rawOriginal);
 
         if (method_exists($tokenModel->getConnection(), 'hasModifiedRecords') &&
@@ -49,25 +48,21 @@ class TokenUpdateLastUsedAtJob implements ShouldQueue
      */
     private function saveToken(PersonalAccessToken $jobTokenModel): void
     {
-        $cacheTokenModel = $this->accessTokensService->getAccessTokenInstance($jobTokenModel->id);
+        $cacheTokenModel = $this->accessTokensService->getAccessToken($jobTokenModel->id);
 
         if ($cacheTokenModel) {
-            if ($jobTokenModel->version >= $cacheTokenModel->version) {
+            if ($jobTokenModel->getRawOriginal('version') >= $cacheTokenModel->getRawOriginal('version')) {
                 $jobTokenModel->forceFill([
                     'last_used_at' => $this->now,
-                    'version' => $jobTokenModel->version
                 ])->save();
             }
         } else {
             $dbTokenModel = PersonalAccessToken::find($jobTokenModel->id);
 
             if ($dbTokenModel) {
-                if ($jobTokenModel->version >= $dbTokenModel->version) {
-                    $dbTokenModel->forceFill([
-                        'last_used_at' => $this->now,
-                        'version' => $jobTokenModel->version
-                    ])->save();
-                }
+                $dbTokenModel->forceFill([
+                    'last_used_at' => $this->now,
+                ])->save();
             }
         }
     }
