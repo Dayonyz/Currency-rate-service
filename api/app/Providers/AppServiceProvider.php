@@ -2,10 +2,10 @@
 
 namespace App\Providers;
 
-use App\Helpers\TokensContainerHelper;
+use App\Helpers\SanctumContainerHelper;
 use App\Repositories\Contracts\CurrencyRatesRepository;
 use App\Repositories\EloquentCurrencyRatesRepository;
-use App\Services\CacheAccessTokensService;
+use App\Services\SanctumCacheService;
 use App\Services\Contracts\CurrencyRates;
 use App\Services\CurrencyRatesOpenExchange;
 use Illuminate\Contracts\Container\BindingResolutionException;
@@ -36,6 +36,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        TokensContainerHelper::useCacheAccessTokensService($this->app->make(CacheAccessTokensService::class));
+        SanctumContainerHelper::useSanctumCacheService($this->app->make(SanctumCacheService::class));
     }
 }

@@ -8,7 +8,7 @@ use Illuminate\Contracts\Cache\Repository as CacheInterface;
 use Illuminate\Database\Eloquent\Model;
 use Psr\SimpleCache\InvalidArgumentException;
 
-class CacheAccessTokensService
+class SanctumCacheService
 {
     private CacheInterface $cache;
     private static PersonalAccessToken $preparedToken;
@@ -24,38 +24,38 @@ class CacheAccessTokensService
         static::$preparedUser->exists = true;
     }
 
-    public function storeAccessTokenAndProvider(PersonalAccessToken $token, Model $tokenAble): void
+    public function storeTokenAndProvider(PersonalAccessToken $token, Model $tokenAble): void
     {
         if ($token->expires_at) {
             $this->cache->put(
-                "sanctum_auth:token:" . $token->id,
+                "sanctum:token:" . $token->id,
                 serialize($token->getRawOriginal()),
                 $token->expires_at
             );
 
             $this->cache->put(
-                "sanctum_auth:tokenable:" . $token->id,
+                "sanctum:token:able:" . $token->id,
                 serialize($tokenAble->getRawOriginal()),
                 $token->expires_at
             );
 
         } else {
             $this->cache->forever(
-                "sanctum_auth:token:" . $token->id,
+                "sanctum:token:" . $token->id,
                 serialize($token->getRawOriginal())
             );
 
             $this->cache->forever(
-                "sanctum_auth:tokenable:" . $token->id,
+                "sanctum:token:able:" . $token->id,
                 serialize($tokenAble->getRawOriginal())
             );
         }
     }
 
-    public function storeAccessTokenEloquent(PersonalAccessToken $token): void
+    public function storeTokenEloquent(PersonalAccessToken $token): void
     {
         $this->cache->forever(
-            "sanctum_auth:token:db:" . $token->id,
+            "sanctum:token:db:" . $token->id,
             serialize(array_filter(
                 $token->getChanges(),
                 fn($k) => ! in_array($k, ['version', 'last_used_at']),
@@ -64,23 +64,23 @@ class CacheAccessTokensService
         );
     }
 
-    public function storeAccessToken(PersonalAccessToken $token): void
+    public function storeToken(PersonalAccessToken $token): void
     {
         if ($token->expires_at) {
             $this->cache->put(
-                "sanctum_auth:token:" . $token->id,
+                "sanctum:token:" . $token->id,
                 serialize($token->getRawOriginal()),
                 $token->expires_at
             );
         } else {
             $this->cache->forever(
-                "sanctum_auth:token:" . $token->id,
+                "sanctum:token:" . $token->id,
                 serialize($token->getRawOriginal())
             );
         }
     }
 
-    public static function restoreAccessTokenFromRawOriginal(array $rawOriginal): PersonalAccessToken
+    public static function restoreTokenFromOriginal(array $rawOriginal): PersonalAccessToken
     {
         return (clone static::$preparedToken)->setRawAttributes($rawOriginal)->syncOriginal();
     }
@@ -88,11 +88,11 @@ class CacheAccessTokensService
     /**
      * @throws InvalidArgumentException
      */
-    public function getAccessTokenWithProvider(int $id): ?PersonalAccessToken
+    public function getTokenWithProvider(int $id): ?PersonalAccessToken
     {
-        $rawOriginalToken = $this->cache->get("sanctum_auth:token:" . $id);
-        $rawOriginalProvider = $this->cache->get("sanctum_auth:tokenable:" . $id);
-        $tokenFromDb = $this->cache->get("sanctum_auth:token:db:" . $id);
+        $rawOriginalToken = $this->cache->get("sanctum:token:" . $id);
+        $rawOriginalProvider = $this->cache->get("sanctum:token:able:" . $id);
+        $tokenFromDb = $this->cache->get("sanctum:token:db:" . $id);
 
         if (! $rawOriginalToken || ! $rawOriginalProvider) {
             return null;
@@ -100,7 +100,7 @@ class CacheAccessTokensService
 
         if ($tokenFromDb) {
             $tokenFromDb = unserialize($tokenFromDb);
-            $this->cache->delete("sanctum_auth:token:db:" . $id);
+            $this->cache->delete("sanctum:token:db:" . $id);
 
             return (clone static::$preparedToken)
                 ->setRawAttributes(
@@ -131,9 +131,9 @@ class CacheAccessTokensService
     /**
      * @throws InvalidArgumentException
      */
-    public function getAccessToken(int $id): ?PersonalAccessToken
+    public function getToken(int $id): ?PersonalAccessToken
     {
-        $rawOriginal = $this->cache->get("sanctum_auth:token:" . $id);
+        $rawOriginal = $this->cache->get("sanctum:token:" . $id);
 
         if (!$rawOriginal) {
             return null;
@@ -145,9 +145,10 @@ class CacheAccessTokensService
     /**
      * @throws InvalidArgumentException
      */
-    public function deleteAccessTokenById(int $id): void
+    public function deleteTokenById(int $id): void
     {
-        $this->cache->delete("sanctum_auth:token:" . $id);
-        $this->cache->delete("sanctum_auth:tokenable:"  .$id);
+        $this->cache->delete("sanctum:token:" . $id);
+        $this->cache->delete("sanctum:token:able:"  .$id);
+        $this->cache->delete("sanctum:token:db:" . $id);
     }
 }

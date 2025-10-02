@@ -4,7 +4,7 @@ namespace App\Providers;
 
 use App\Auth\SanctumCacheGuard;
 use App\Models\PersonalAccessToken;
-use App\Services\CacheAccessTokensService;
+use App\Services\SanctumCacheService;
 use Illuminate\Auth\RequestGuard;
 use Illuminate\Contracts\Auth\Factory;
 use Illuminate\Support\Facades\Auth;
@@ -20,8 +20,8 @@ class SanctumServiceProvider extends ServiceProvider
             Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
             $this->configureGuard();
 
-            $this->app->singleton(CacheAccessTokensService::class, function () {
-                return new CacheAccessTokensService(Cache::store(config('sanctum.cache')));
+            $this->app->singleton(SanctumCacheService::class, function () {
+                return new SanctumCacheService(Cache::store(config('sanctum.cache')));
             });
         }
     }

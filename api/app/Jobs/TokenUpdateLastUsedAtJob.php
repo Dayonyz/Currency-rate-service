@@ -2,9 +2,9 @@
 
 namespace App\Jobs;
 
-use App\Helpers\TokensContainerHelper;
+use App\Helpers\SanctumContainerHelper;
 use App\Models\PersonalAccessToken;
-use App\Services\CacheAccessTokensService;
+use App\Services\SanctumCacheService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -16,7 +16,7 @@ class TokenUpdateLastUsedAtJob implements ShouldQueue
 
     public array $rawOriginal;
     public string $now;
-    private CacheAccessTokensService $accessTokensService;
+    private SanctumCacheService $sanctumCacheService;
 
     public function __construct(array $rawOriginal, string $now)
     {
@@ -29,8 +29,8 @@ class TokenUpdateLastUsedAtJob implements ShouldQueue
      */
     public function handle()
     {
-        $this->accessTokensService = TokensContainerHelper::getAccessTokenService();
-        $tokenModel = $this->accessTokensService::restoreAccessTokenFromRawOriginal($this->rawOriginal);
+        $this->sanctumCacheService = SanctumContainerHelper::getSanctumCacheService();
+        $tokenModel = $this->sanctumCacheService::restoreTokenFromOriginal($this->rawOriginal);
 
         if (method_exists($tokenModel->getConnection(), 'hasModifiedRecords') &&
             method_exists($tokenModel->getConnection(), 'setRecordModificationState')) {
@@ -48,7 +48,7 @@ class TokenUpdateLastUsedAtJob implements ShouldQueue
      */
     private function saveToken(PersonalAccessToken $jobTokenModel): void
     {
-        $cacheTokenModel = $this->accessTokensService->getAccessToken($jobTokenModel->id);
+        $cacheTokenModel = $this->sanctumCacheService->getToken($jobTokenModel->id);
 
         if ($cacheTokenModel) {
             if ($jobTokenModel->getRawOriginal('version') >= $cacheTokenModel->getRawOriginal('version')) {
