@@ -51,7 +51,7 @@ class CommonPerformanceTests extends Command
         }
         $end = hrtime(true);
 
-        echo "Get instance from helper container: " . round(($end-$start)/(1000*1000), 2) . "\n";
+        echo "Get instance from static container: " . round(($end-$start)/(1000*1000), 2) . "\n";
         echo "---------------------------" . "\n";
 
         /**
@@ -87,12 +87,12 @@ class CommonPerformanceTests extends Command
         }
         $end = hrtime(true);
 
-        echo "Find from helper: " . round(($end-$start)/(1000*1000), 2) . "\n";
+        echo "Find from static container: " . round(($end-$start)/(1000*1000), 2) . "\n";
         echo "---------------------------" . "\n";
 
         $start = hrtime(true);
         for ($i = 0; $i < 10000; $i++) {
-            app(SanctumCacheService::class)->getAccessTokenWithProvider(12);
+            app(SanctumCacheService::class)->getTokenWithProvider(12);
         }
         $end = hrtime(true);
 
