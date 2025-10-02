@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Helpers\SanctumContainerHelper;
+use App\Helpers\StaticContainer;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Sanctum\PersonalAccessToken as BaseToken;
 use Psr\SimpleCache\InvalidArgumentException;
@@ -29,7 +29,7 @@ class PersonalAccessToken extends BaseToken
         parent::boot();
 
         static::deleted(function ($model) {
-            SanctumContainerHelper::getSanctumCacheService()->deleteTokenById($model->id);
+            StaticContainer::getSanctumCacheService()->deleteTokenById($model->id);
         });
 
         static::updated(function ($model) {
@@ -37,7 +37,7 @@ class PersonalAccessToken extends BaseToken
                 array_count_values(array_keys($model->getChanges())),
                 ['version' => 1, 'last_used_at' => 1]
             ))) {
-                SanctumContainerHelper::getSanctumCacheService()->storeTokenEloquent($model);
+                StaticContainer::getSanctumCacheService()->storeTokenEloquent($model);
             }
         });
     }
@@ -58,7 +58,7 @@ class PersonalAccessToken extends BaseToken
         /**
          * @var PersonalAccessToken $accessToken
          */
-        $accessToken = SanctumContainerHelper::getSanctumCacheService()->getTokenWithProvider($id);
+        $accessToken = StaticContainer::getSanctumCacheService()->getTokenWithProvider($id);
 
         if ($accessToken &&
             $accessToken->id === (int)$id &&
@@ -69,18 +69,18 @@ class PersonalAccessToken extends BaseToken
             )))
         ) {
             $accessToken->original['version'] = hrtime(true);
-            SanctumContainerHelper::getSanctumCacheService()->storeToken($accessToken);
+            StaticContainer::getSanctumCacheService()->storeToken($accessToken);
 
             return $accessToken;
         } else if ($accessToken) {
-            SanctumContainerHelper::getSanctumCacheService()->deleteTokenById($accessToken->id);
+            StaticContainer::getSanctumCacheService()->deleteTokenById($accessToken->id);
         }
 
         $accessToken = static::findTokenFromDB($id, $plainTextToken);
 
         if ($accessToken) {
             $accessToken->original['version'] = hrtime(true);
-            SanctumContainerHelper::getSanctumCacheService()->storeToken($accessToken);
+            StaticContainer::getSanctumCacheService()->storeToken($accessToken);
         }
 
         return $accessToken;

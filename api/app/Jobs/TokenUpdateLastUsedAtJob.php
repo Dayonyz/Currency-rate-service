@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Helpers\SanctumContainerHelper;
+use App\Helpers\StaticContainer;
 use App\Models\PersonalAccessToken;
 use App\Services\SanctumCacheService;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -29,7 +29,7 @@ class TokenUpdateLastUsedAtJob implements ShouldQueue
      */
     public function handle()
     {
-        $this->sanctumCacheService = SanctumContainerHelper::getSanctumCacheService();
+        $this->sanctumCacheService = StaticContainer::getSanctumCacheService();
         $tokenModel = $this->sanctumCacheService::restoreTokenFromOriginal($this->rawOriginal);
 
         if (method_exists($tokenModel->getConnection(), 'hasModifiedRecords') &&

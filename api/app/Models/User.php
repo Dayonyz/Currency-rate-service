@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Helpers\SanctumContainerHelper;
+use App\Helpers\StaticContainer;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -84,7 +84,7 @@ class User extends Authenticatable
         $fullToken = $token->id . '|' . $plainTextToken;
 
         if (config('sanctum.cache')) {
-            SanctumContainerHelper::getSanctumCacheService()->storeTokenAndProvider($token, $this);
+            StaticContainer::getSanctumCacheService()->storeTokenAndProvider($token, $this);
         }
 
         return new NewAccessToken($token, $fullToken);

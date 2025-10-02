@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Helpers\SanctumContainerHelper;
+use App\Helpers\StaticContainer;
 use App\Models\PersonalAccessToken;
 use App\Services\SanctumCacheService;
 use Illuminate\Console\Command;
@@ -33,7 +33,7 @@ class CommonPerformanceTests extends Command
         echo "---------------------------" . "\n";
 
         $cacheService = app(SanctumCacheService::class);
-        SanctumContainerHelper::useSanctumCacheService($cacheService);
+        StaticContainer::useSanctumCacheService($cacheService);
 
         $start = hrtime(true);
         for ($i = 0; $i < 100000; $i++) {
@@ -47,7 +47,7 @@ class CommonPerformanceTests extends Command
 
         $start = hrtime(true);
         for ($i = 0; $i < 100000; $i++) {
-            $cacheService = SanctumContainerHelper::getSanctumCacheService();
+            $cacheService = StaticContainer::getSanctumCacheService();
         }
         $end = hrtime(true);
 
@@ -83,7 +83,7 @@ class CommonPerformanceTests extends Command
 
         $start = hrtime(true);
         for ($i = 0; $i < 10000; $i++) {
-            SanctumContainerHelper::getSanctumCacheService()->getTokenWithProvider(12);
+            StaticContainer::getSanctumCacheService()->getTokenWithProvider(12);
         }
         $end = hrtime(true);
 

@@ -4,7 +4,7 @@ namespace App\Helpers;
 
 use App\Services\SanctumCacheService;
 
-class SanctumContainerHelper
+class StaticContainer
 {
     protected static ?SanctumCacheService $sanctumCacheService = null;
 

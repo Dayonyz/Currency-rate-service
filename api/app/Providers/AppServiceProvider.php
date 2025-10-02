@@ -2,7 +2,7 @@
 
 namespace App\Providers;
 
-use App\Helpers\SanctumContainerHelper;
+use App\Helpers\StaticContainer;
 use App\Repositories\Contracts\CurrencyRatesRepository;
 use App\Repositories\EloquentCurrencyRatesRepository;
 use App\Services\SanctumCacheService;
@@ -36,6 +36,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        SanctumContainerHelper::useSanctumCacheService($this->app->make(SanctumCacheService::class));
+        StaticContainer::useSanctumCacheService($this->app->make(SanctumCacheService::class));
     }
 }
