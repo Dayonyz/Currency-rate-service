@@ -34,7 +34,7 @@ class SanctumCacheService
             );
 
             $this->cache->put(
-                "sanctum:token:able:" . $token->id,
+                "sanctum:token_able:" . $token->id,
                 serialize($tokenAble->getRawOriginal()),
                 $token->expires_at
             );
@@ -46,7 +46,7 @@ class SanctumCacheService
             );
 
             $this->cache->forever(
-                "sanctum:token:able:" . $token->id,
+                "sanctum:token_able:" . $token->id,
                 serialize($tokenAble->getRawOriginal())
             );
         }
@@ -55,7 +55,7 @@ class SanctumCacheService
     public function storeTokenEloquent(PersonalAccessToken $token): void
     {
         $this->cache->forever(
-            "sanctum:token:db:" . $token->id,
+            "sanctum:token_db:" . $token->id,
             serialize(array_filter(
                 $token->getChanges(),
                 fn($k) => ! in_array($k, ['version', 'last_used_at']),
@@ -91,8 +91,8 @@ class SanctumCacheService
     public function getTokenWithProvider(int $id): ?PersonalAccessToken
     {
         $rawOriginalToken = $this->cache->get("sanctum:token:" . $id);
-        $rawOriginalProvider = $this->cache->get("sanctum:token:able:" . $id);
-        $tokenFromDb = $this->cache->get("sanctum:token:db:" . $id);
+        $rawOriginalProvider = $this->cache->get("sanctum:token_able:" . $id);
+        $tokenFromDb = $this->cache->get("sanctum:token_db:" . $id);
 
         if (! $rawOriginalToken || ! $rawOriginalProvider) {
             return null;
@@ -100,7 +100,7 @@ class SanctumCacheService
 
         if ($tokenFromDb) {
             $tokenFromDb = unserialize($tokenFromDb);
-            $this->cache->delete("sanctum:token:db:" . $id);
+            $this->cache->delete("sanctum:token_db:" . $id);
 
             return (clone static::$preparedToken)
                 ->setRawAttributes(
@@ -148,7 +148,7 @@ class SanctumCacheService
     public function deleteTokenById(int $id): void
     {
         $this->cache->delete("sanctum:token:" . $id);
-        $this->cache->delete("sanctum:token:able:"  .$id);
-        $this->cache->delete("sanctum:token:db:" . $id);
+        $this->cache->delete("sanctum:token_able:"  .$id);
+        $this->cache->delete("sanctum:token_db:" . $id);
     }
 }
