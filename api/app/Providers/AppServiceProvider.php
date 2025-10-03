@@ -2,13 +2,10 @@
 
 namespace App\Providers;
 
-use App\Helpers\StaticContainer;
 use App\Repositories\Contracts\CurrencyRatesRepository;
 use App\Repositories\EloquentCurrencyRatesRepository;
-use App\Services\SanctumCacheService;
 use App\Services\Contracts\CurrencyRates;
 use App\Services\CurrencyRatesOpenExchange;
-use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\ServiceProvider;
 
@@ -28,14 +25,5 @@ class AppServiceProvider extends ServiceProvider
                 !$repoCacheStore ? null : Cache::store($repoCacheStore)
             );
         });
-    }
-
-    /**
-     * Bootstrap any application services.
-     * @throws BindingResolutionException
-     */
-    public function boot(): void
-    {
-        StaticContainer::useSanctumCacheService($this->app->make(SanctumCacheService::class));
     }
 }

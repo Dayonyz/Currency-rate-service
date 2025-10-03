@@ -29,7 +29,7 @@ class TokenUpdateLastUsedAtJob implements ShouldQueue
      */
     public function handle()
     {
-        $this->sanctumCacheService = StaticContainer::getSanctumCacheService();
+        $this->sanctumCacheService = StaticContainer::getSanctumCache();
         $tokenModel = $this->sanctumCacheService::restoreTokenFromOriginal($this->rawOriginal);
 
         if (method_exists($tokenModel->getConnection(), 'hasModifiedRecords') &&

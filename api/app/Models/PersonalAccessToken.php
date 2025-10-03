@@ -29,7 +29,7 @@ class PersonalAccessToken extends BaseToken
         parent::boot();
 
         static::deleted(function ($model) {
-            StaticContainer::getSanctumCacheService()->deleteTokenById($model->id);
+            StaticContainer::getSanctumCache()->deleteTokenById($model->id);
         });
 
         static::updated(function ($model) {
@@ -37,7 +37,7 @@ class PersonalAccessToken extends BaseToken
                 array_count_values(array_keys($model->getChanges())),
                 ['version' => 1, 'last_used_at' => 1]
             ))) {
-                StaticContainer::getSanctumCacheService()->storeTokenEloquent($model);
+                StaticContainer::getSanctumCache()->storeTokenEloquent($model);
             }
         });
     }
@@ -58,7 +58,7 @@ class PersonalAccessToken extends BaseToken
         /**
          * @var PersonalAccessToken $accessToken
          */
-        $accessToken = StaticContainer::getSanctumCacheService()->getTokenWithProvider($id);
+        $accessToken = StaticContainer::getSanctumCache()->getTokenWithProvider($id);
 
         if ($accessToken &&
             $accessToken->id === (int)$id &&
@@ -69,18 +69,18 @@ class PersonalAccessToken extends BaseToken
             )))
         ) {
             $accessToken->original['version'] = hrtime(true);
-            StaticContainer::getSanctumCacheService()->storeToken($accessToken);
+            StaticContainer::getSanctumCache()->storeToken($accessToken);
 
             return $accessToken;
         } else if ($accessToken) {
-            StaticContainer::getSanctumCacheService()->deleteTokenById($accessToken->id);
+            StaticContainer::getSanctumCache()->deleteTokenById($accessToken->id);
         }
 
         $accessToken = static::findTokenFromDB($id, $plainTextToken);
 
         if ($accessToken) {
             $accessToken->original['version'] = hrtime(true);
-            StaticContainer::getSanctumCacheService()->storeToken($accessToken);
+            StaticContainer::getSanctumCache()->storeToken($accessToken);
         }
 
         return $accessToken;

@@ -6,19 +6,19 @@ use App\Services\SanctumCacheService;
 
 class StaticContainer
 {
-    protected static ?SanctumCacheService $sanctumCacheService = null;
+    public static ?SanctumCacheService $sanctumCache = null;
 
-    public static function useSanctumCacheService(SanctumCacheService $service): void
+    public static function useSanctumCache(SanctumCacheService $service): void
     {
-        static::$sanctumCacheService = $service;
+        static::$sanctumCache = $service;
     }
 
-    public static function getSanctumCacheService(): SanctumCacheService
+    public static function getSanctumCache(): SanctumCacheService
     {
-        if (! static::$sanctumCacheService) {
-            static::useSanctumCacheService(app(SanctumCacheService::class));
+        if (! static::$sanctumCache) {
+            static::useSanctumCache(app(SanctumCacheService::class));
         }
 
-        return static::$sanctumCacheService;
+        return static::$sanctumCache;
     }
 }

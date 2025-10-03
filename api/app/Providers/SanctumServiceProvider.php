@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Auth\SanctumCacheGuard;
+use App\Helpers\StaticContainer;
 use App\Models\PersonalAccessToken;
 use App\Services\SanctumCacheService;
 use Illuminate\Auth\RequestGuard;
@@ -20,6 +21,18 @@ class SanctumServiceProvider extends ServiceProvider
             Sanctum::usePersonalAccessTokenModel(PersonalAccessToken::class);
             $this->configureGuard();
 
+            $this->app->afterResolving(SanctumCacheService::class, function ($service) {
+                StaticContainer::useSanctumCache($service);
+            });
+        }
+    }
+
+    /**
+     * Register any application services.
+     */
+    public function register(): void
+    {
+        if (config('sanctum.cache')) {
             $this->app->singleton(SanctumCacheService::class, function () {
                 return new SanctumCacheService(Cache::store(config('sanctum.cache')));
             });
