@@ -462,7 +462,7 @@ I was very unhappy with my decision to serialize Sanctum and its provider tokens
 
 So final changes are:
 - PersonalAccessToken hash algorithm changed from SHA256 to Blake2b
-- Sanctum tokens serialize-unserialize replaced via store-restore methods in App\Services\CacheAccessTokensService
+- Sanctum tokens serialize-unserialize replaced via store-restore methods in App\Services\SanctumCacheService
 - SanctumCacheService retrieved once in App\Helpers\StaticContainer
 - Memcached is totally removed
 - All caches placed into different Redis DBs on the same instance
