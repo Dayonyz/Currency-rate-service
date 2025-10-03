@@ -135,7 +135,7 @@ class SanctumCacheService
     {
         $rawOriginal = $this->cache->get("sanctum:token:" . $id);
 
-        if (!$rawOriginal) {
+        if (! $rawOriginal) {
             return null;
         }
 
