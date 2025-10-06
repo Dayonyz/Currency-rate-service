@@ -71,7 +71,7 @@ export default function () {
         check(res2, { 'User Journey - Login: GET rates first paginator, page 1 status is 200': (r) => r.status === 200 });
     });
     
-    sleep(0.1);
+    sleep(0.2);
     
     group('User Journey - Random paginator: first page', function () {
         let res3 = http.get(`{$baseUrl}/api/currency/rate/EUR/USD`, { headers });
@@ -81,7 +81,7 @@ export default function () {
         check(res4, { 'User Journey - Random paginator: GET rates random paginator, page 1 status is 200': (r) => r.status === 200 });
     });
     
-    sleep(0.1);
+    sleep(0.2);
 
     group('User Journey - Random paginator: random page', function () {
         let res5 = http.get(`{$baseUrl}/api/currency/rate/EUR/USD`, { headers });
@@ -91,7 +91,7 @@ export default function () {
         check(res6, { 'User Journey - Random paginator: GET rates random paginator, random page status is 200': (r) => r.status === 200 });
     });
     
-    sleep(0.01);
+    sleep(0.02);
 }
 JS;
 

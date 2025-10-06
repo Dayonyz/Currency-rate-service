@@ -467,26 +467,27 @@ So final changes are:
 - Memcached is totally removed
 - All caches placed into different Redis DBs on the same instance
 - A separate Redis instance is created for async tokens updates from queues
+- Increased breaks between user actions in the scenario
 
 After all these changes and refactoring, I got more realistic and even better results, and I'm happy with them. Now that's a happy end!!!
 
 **🔥 2683 RPS, avg HTTP request duration - 715.67ms, 1800 VUs load 🔥**
 
 ```
- █ THRESHOLDS 
+  █ THRESHOLDS 
 
     checks
     ✓ 'rate>0.95' rate=100.00%
 
     http_req_duration
-    ✓ 'p(90)<3000' p(90)=715.67ms
+    ✓ 'p(90)<3000' p(90)=696.03ms
 
 
   █ TOTAL RESULTS 
 
-    checks_total.......: 1127718 2683.771523/s
-    checks_succeeded...: 100.00% 1127718 out of 1127718
-    checks_failed......: 0.00%   0 out of 1127718
+    checks_total.......: 1138866 2709.575364/s
+    checks_succeeded...: 100.00% 1138866 out of 1138866
+    checks_failed......: 0.00%   0 out of 1138866
 
     ✓ User Journey - Login: GET current rate status is 200
     ✓ User Journey - Login: GET rates first paginator, page 1 status is 200
@@ -495,25 +496,24 @@ After all these changes and refactoring, I got more realistic and even better re
     ✓ User Journey - Random paginator: GET rates random paginator, random page status is 200
 
     HTTP
-    http_req_duration..............: avg=541.11ms min=1.71ms   med=593.78ms max=1.2s  p(90)=715.67ms p(95)=758.77ms
-      { expected_response:true }...: avg=541.11ms min=1.71ms   med=593.78ms max=1.2s  p(90)=715.67ms p(95)=758.77ms
-    http_req_failed................: 0.00%   0 out of 1127718
-    http_reqs......................: 1127718 2683.771523/s
+    http_req_duration..............: avg=500.39ms min=1.72ms   med=521.98ms max=1.47s p(90)=696.03ms p(95)=853.03ms
+      { expected_response:true }...: avg=500.39ms min=1.72ms   med=521.98ms max=1.47s p(90)=696.03ms p(95)=853.03ms
+    http_req_failed................: 0.00%   0 out of 1138866
+    http_reqs......................: 1138866 2709.575364/s
 
     EXECUTION
-    iteration_duration.............: avg=3.45s    min=223.05ms med=3.87s    max=5.17s p(90)=4.22s    p(95)=4.32s   
-    iterations.....................: 187953  447.295254/s
-    vus............................: 7       min=7            max=1800
+    iteration_duration.............: avg=3.42s    min=432.25ms med=3.7s     max=6.5s  p(90)=4.28s    p(95)=4.47s   
+    iterations.....................: 189811  451.595894/s
+    vus............................: 11      min=11           max=1800
     vus_max........................: 1800    min=1800         max=1800
 
     NETWORK
-    data_received..................: 3.7 GB  8.9 MB/s
-    data_sent......................: 226 MB  538 kB/s
+    data_received..................: 3.8 GB  9.0 MB/s
+    data_sent......................: 228 MB  543 kB/s
 
 
 
 
-running (7m00.2s), 0000/1800 VUs, 187953 complete and 0 interrupted iterations
+running (7m00.3s), 0000/1800 VUs, 189811 complete and 0 interrupted iterations
 contacts ✓ [======================================] 0000/1800 VUs  7m0s
-
 ```
