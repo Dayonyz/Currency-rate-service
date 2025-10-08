@@ -56,6 +56,14 @@ RUN mkdir -p ${PROJECT_PATH} && \
     chown -R ${USER_DOCKER_ID}:${GROUP_DOCKER_ID} ${PROJECT_PATH} && \
     chmod -R 755 ${PROJECT_PATH}
 
+# Copy Composer auth credentials (GitHub token)
+COPY composer/auth.json /var/www/.composer/auth.json
+
+# Set correct permissions for Composer auth file
+RUN mkdir -p /var/www/.composer && \
+    chmod 600 /var/www/.composer/auth.json && \
+    chown -R ${USER_DOCKER_ID}:${GROUP_DOCKER_ID} /var/www/.composer
+
 WORKDIR ${PROJECT_PATH}
 
 COPY --chmod=0755 .docker/entrypoint.sh /usr/local/bin/entrypoint.sh

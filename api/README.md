@@ -468,8 +468,7 @@ So final changes are:
 - Memcached is totally removed
 - All caches placed into different Redis DBs on the same instance
 - A separate Redis instance is created for async tokens updates from queues
-- Increased breaks between user actions in the scenario
-- 
+- Increased breaks between user actions in the stress-test scenario
 
 After all these changes and refactoring, I got more realistic and even better results, and I'm happy with them. Now that's a happy end!!!
 
