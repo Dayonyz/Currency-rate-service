@@ -2,11 +2,11 @@
 
 namespace App\Console\Commands;
 
-use App\Helpers\StaticContainer;
-use App\Models\PersonalAccessToken;
-use App\Services\SanctumCacheService;
 use Illuminate\Console\Command;
 use Psr\SimpleCache\InvalidArgumentException;
+use SanctumBulwark\BulwarkTokenRepository;
+use SanctumBulwark\PersonalAccessToken;
+use SanctumBulwark\StaticContainer;
 
 class CommonPerformanceTests extends Command
 {
@@ -32,12 +32,12 @@ class CommonPerformanceTests extends Command
     {
         echo "---------------------------" . "\n";
 
-        $cacheService = app(SanctumCacheService::class);
-        StaticContainer::useSanctumCache($cacheService);
+        $cacheService = app(BulwarkTokenRepository::class);
+        StaticContainer::useTokenRepository($cacheService);
 
         $start = hrtime(true);
         for ($i = 0; $i < 100000; $i++) {
-            $cacheService = app(SanctumCacheService::class);
+            $cacheService = app(BulwarkTokenRepository::class);
         }
         $end = hrtime(true);
 
@@ -47,7 +47,7 @@ class CommonPerformanceTests extends Command
 
         $start = hrtime(true);
         for ($i = 0; $i < 100000; $i++) {
-            $cacheService = StaticContainer::getSanctumCache();
+            $cacheService = StaticContainer::getTokenRepository();
         }
         $end = hrtime(true);
 
@@ -82,7 +82,7 @@ class CommonPerformanceTests extends Command
 
         $start = hrtime(true);
         for ($i = 0; $i < 10000; $i++) {
-            $token = StaticContainer::getSanctumCache()->getTokenWithProvider(12);
+            $token = StaticContainer::getTokenRepository()->getTokenWithProvider(12);
         }
         $end = hrtime(true);
 
@@ -92,7 +92,7 @@ class CommonPerformanceTests extends Command
 
         $start = hrtime(true);
         for ($i = 0; $i < 10000; $i++) {
-            $token = app(SanctumCacheService::class)->getTokenWithProvider(12);
+            $token = app(BulwarkTokenRepository::class)->getTokenWithProvider(12);
         }
         $end = hrtime(true);
 
