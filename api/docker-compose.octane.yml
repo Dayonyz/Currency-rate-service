@@ -140,7 +140,7 @@ services:
             - ./.docker/php-swoole/php.ini:/usr/local/etc/php/php.ini
         working_dir: ${DOCKER_CODE_FOLDER}
         #command: php artisan queue:work --sleep=3 --tries=3 >> /proc/1/fd/1 2>&1
-        command: php artisan queue:work --sleep=3 --tries=3
+        command: php artisan queue:work redis --queue=bulwark --sleep=3 --tries=3
         healthcheck:
             test: [ "CMD", "pgrep", "php" ]
             interval: 5s

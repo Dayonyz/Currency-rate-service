@@ -2,14 +2,10 @@
 
 namespace App\Models;
 
-use App\Helpers\StaticContainer;
-use DateTimeInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
-use Laravel\Sanctum\NewAccessToken;
-use SodiumException;
+use SanctumBulwark\HasApiTokens;
 
 class User extends Authenticatable
 {
@@ -37,16 +33,6 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::deleted(function (User $model) {
-            $model->tokens()->delete();
-        });
-    }
-
     /**
      * Get the attributes that should be cast.
      *
@@ -58,35 +44,5 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
-    }
-
-    /**
-     * @throws SodiumException
-     */
-    public function createToken(
-        string $name,
-        array $abilities = ['*'],
-        ?DateTimeInterface $expiresAt = null
-    ): NewAccessToken {
-        $plainTextToken = $this->generateTokenString();
-
-        $token = $this->tokens()->create([
-            'name' => $name,
-            'token' =>  sodium_bin2hex(sodium_crypto_generichash(
-                $plainTextToken,
-                '',
-                16
-            )),
-            'abilities' => $abilities,
-            'expires_at' => $expiresAt,
-        ]);
-
-        $fullToken = $token->id . '|' . $plainTextToken;
-
-        if (config('sanctum.cache')) {
-            StaticContainer::getSanctumCache()->storeTokenAndProvider($token, $this);
-        }
-
-        return new NewAccessToken($token, $fullToken);
     }
 }

@@ -462,16 +462,18 @@ I was very unhappy with my decision to serialize Sanctum and its provider tokens
 
 So final changes are:
 - PersonalAccessToken hash algorithm changed from SHA256 to Blake2b
-- Sanctum tokens serialize-unserialize replaced via store-restore methods in App\Services\SanctumCacheService
-- SanctumCacheService retrieved once in App\Helpers\StaticContainer
+- Sanctum caching moved to separate package "dayonyz/sanctum-bulwark"
+- Sanctum tokens serialize-unserialize replaced via store-restore methods SanctumBulwark\BulwarkTokenRepository
+- SanctumBulwark\BulwarkTokenRepository retrieved once in SanctumBulwark\StaticContainer
 - Memcached is totally removed
 - All caches placed into different Redis DBs on the same instance
 - A separate Redis instance is created for async tokens updates from queues
 - Increased breaks between user actions in the scenario
+- 
 
 After all these changes and refactoring, I got more realistic and even better results, and I'm happy with them. Now that's a happy end!!!
 
-**🔥 2683 RPS, avg HTTP request duration - 715.67ms, 1800 VUs load 🔥**
+**🔥 2591 RPS, avg HTTP request duration - 727.83ms, 1800 VUs load 🔥**
 
 ```
   █ THRESHOLDS 
@@ -480,14 +482,14 @@ After all these changes and refactoring, I got more realistic and even better re
     ✓ 'rate>0.95' rate=100.00%
 
     http_req_duration
-    ✓ 'p(90)<3000' p(90)=696.03ms
+    ✓ 'p(90)<3000' p(90)=727.83ms
 
 
   █ TOTAL RESULTS 
 
-    checks_total.......: 1138866 2709.575364/s
-    checks_succeeded...: 100.00% 1138866 out of 1138866
-    checks_failed......: 0.00%   0 out of 1138866
+    checks_total.......: 1089294 2591.168967/s
+    checks_succeeded...: 100.00% 1089294 out of 1089294
+    checks_failed......: 0.00%   0 out of 1089294
 
     ✓ User Journey - Login: GET current rate status is 200
     ✓ User Journey - Login: GET rates first paginator, page 1 status is 200
@@ -496,24 +498,25 @@ After all these changes and refactoring, I got more realistic and even better re
     ✓ User Journey - Random paginator: GET rates random paginator, random page status is 200
 
     HTTP
-    http_req_duration..............: avg=500.39ms min=1.72ms   med=521.98ms max=1.47s p(90)=696.03ms p(95)=853.03ms
-      { expected_response:true }...: avg=500.39ms min=1.72ms   med=521.98ms max=1.47s p(90)=696.03ms p(95)=853.03ms
-    http_req_failed................: 0.00%   0 out of 1138866
-    http_reqs......................: 1138866 2709.575364/s
+    http_req_duration..............: avg=526.6ms min=1.61ms   med=544.94ms max=1.53s p(90)=727.83ms p(95)=893.78ms
+      { expected_response:true }...: avg=526.6ms min=1.61ms   med=544.94ms max=1.53s p(90)=727.83ms p(95)=893.78ms
+    http_req_failed................: 0.00%   0 out of 1089294
+    http_reqs......................: 1089294 2591.168967/s
 
     EXECUTION
-    iteration_duration.............: avg=3.42s    min=432.25ms med=3.7s     max=6.5s  p(90)=4.28s    p(95)=4.47s   
-    iterations.....................: 189811  451.595894/s
-    vus............................: 11      min=11           max=1800
+    iteration_duration.............: avg=3.58s   min=433.78ms med=3.84s    max=7.14s p(90)=4.45s    p(95)=4.59s   
+    iterations.....................: 181549  431.861495/s
+    vus............................: 16      min=16           max=1800
     vus_max........................: 1800    min=1800         max=1800
 
     NETWORK
-    data_received..................: 3.8 GB  9.0 MB/s
-    data_sent......................: 228 MB  543 kB/s
+    data_received..................: 3.6 GB  8.6 MB/s
+    data_sent......................: 218 MB  520 kB/s
 
 
 
 
-running (7m00.3s), 0000/1800 VUs, 189811 complete and 0 interrupted iterations
+running (7m00.4s), 0000/1800 VUs, 181549 complete and 0 interrupted iterations
 contacts ✓ [======================================] 0000/1800 VUs  7m0s
+
 ```

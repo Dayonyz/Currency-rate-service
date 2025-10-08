@@ -3,5 +3,5 @@
 return [
     App\Providers\AppServiceProvider::class,
     App\Providers\RouteServiceProvider::class,
-    App\Providers\SanctumServiceProvider::class
+    //App\Providers\SanctumServiceProvider::class
 ];
