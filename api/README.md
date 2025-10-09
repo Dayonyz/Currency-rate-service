@@ -463,7 +463,7 @@ I was very unhappy with my decision to serialize Sanctum and its provider tokens
 So final changes are:
 - PersonalAccessToken hash algorithm changed from SHA256 to Blake2b
 - Sanctum caching moved to separate package "dayonyz/sanctum-bulwark"
-- Sanctum tokens serialize-unserialize replaced via store-restore methods SanctumBulwark\BulwarkTokenRepository
+- Sanctum tokens serialize-unserialize replaced via store-restore methods SanctumBulwark\TokenRepository
 - SanctumBulwark\BulwarkTokenRepository retrieved once in SanctumBulwark\StaticContainer
 - Memcached is totally removed
 - All caches placed into different Redis DBs on the same instance
