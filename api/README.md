@@ -472,7 +472,7 @@ So final changes are:
 
 After all these changes and refactoring, I got more realistic and even better results, and I'm happy with them. Now that's a happy end!!!
 
-**🔥 2591 RPS, avg HTTP request duration - 727.83ms, 1800 VUs load 🔥**
+**🔥 2747 RPS, avg HTTP request duration - 645.46ms, 1800 VUs load 🔥**
 
 ```
   █ THRESHOLDS 
@@ -481,14 +481,14 @@ After all these changes and refactoring, I got more realistic and even better re
     ✓ 'rate>0.95' rate=100.00%
 
     http_req_duration
-    ✓ 'p(90)<3000' p(90)=727.83ms
+    ✓ 'p(90)<3000' p(90)=645.46ms
 
 
   █ TOTAL RESULTS 
 
-    checks_total.......: 1089294 2591.168967/s
-    checks_succeeded...: 100.00% 1089294 out of 1089294
-    checks_failed......: 0.00%   0 out of 1089294
+    checks_total.......: 1155186 2747.986164/s
+    checks_succeeded...: 100.00% 1155186 out of 1155186
+    checks_failed......: 0.00%   0 out of 1155186
 
     ✓ User Journey - Login: GET current rate status is 200
     ✓ User Journey - Login: GET rates first paginator, page 1 status is 200
@@ -497,25 +497,24 @@ After all these changes and refactoring, I got more realistic and even better re
     ✓ User Journey - Random paginator: GET rates random paginator, random page status is 200
 
     HTTP
-    http_req_duration..............: avg=526.6ms min=1.61ms   med=544.94ms max=1.53s p(90)=727.83ms p(95)=893.78ms
-      { expected_response:true }...: avg=526.6ms min=1.61ms   med=544.94ms max=1.53s p(90)=727.83ms p(95)=893.78ms
-    http_req_failed................: 0.00%   0 out of 1089294
-    http_reqs......................: 1089294 2591.168967/s
+    http_req_duration..............: avg=492.49ms min=1.79ms   med=530.32ms max=1.12s p(90)=645.46ms p(95)=690.51ms
+      { expected_response:true }...: avg=492.49ms min=1.79ms   med=530.32ms max=1.12s p(90)=645.46ms p(95)=690.51ms
+    http_req_failed................: 0.00%   0 out of 1155186
+    http_reqs......................: 1155186 2747.986164/s
 
     EXECUTION
-    iteration_duration.............: avg=3.58s   min=433.78ms med=3.84s    max=7.14s p(90)=4.45s    p(95)=4.59s   
-    iterations.....................: 181549  431.861495/s
-    vus............................: 16      min=16           max=1800
+    iteration_duration.............: avg=3.37s    min=433.73ms med=3.68s    max=4.86s p(90)=4.05s    p(95)=4.14s   
+    iterations.....................: 192531  457.997694/s
+    vus............................: 12      min=12           max=1800
     vus_max........................: 1800    min=1800         max=1800
 
     NETWORK
-    data_received..................: 3.6 GB  8.6 MB/s
-    data_sent......................: 218 MB  520 kB/s
+    data_received..................: 3.8 GB  9.1 MB/s
+    data_sent......................: 232 MB  551 kB/s
 
 
 
 
-running (7m00.4s), 0000/1800 VUs, 181549 complete and 0 interrupted iterations
+running (7m00.4s), 0000/1800 VUs, 192531 complete and 0 interrupted iterations
 contacts ✓ [======================================] 0000/1800 VUs  7m0s
-
 ```

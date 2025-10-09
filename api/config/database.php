@@ -1,7 +1,5 @@
 <?php
 
-use Illuminate\Support\Str;
-
 return [
 
     /*
@@ -151,37 +149,37 @@ return [
             'port' => env('REDIS_PORT', 6379),
             'database' => 0,
             'persistent' => true,
-            'persistent_id' => 'cache_connection',
+            'persistent_id' => 'cache_conn',
             'read_timeout' => 60,
         ],
 
-        'cache-sanctum' => [
+        'bulwark' => [
             'host' => env('REDIS_CACHE_HOST', 'redis-cache'),
             'password' => env('REDIS_PASSWORD', null),
             'port' => env('REDIS_PORT', 6379),
             'database' => 1,
             'persistent' => true,
-            'persistent_id' => 'cache_connection_sanctum',
+            'persistent_id' => 'bulwark_conn',
             'read_timeout' => 60,
         ],
 
-        'cache-repository' => [
+        'repository' => [
             'host' => env('REDIS_CACHE_HOST', 'redis-cache'),
             'password' => env('REDIS_PASSWORD', null),
             'port' => env('REDIS_PORT', 6379),
             'database' => 2,
             'persistent' => true,
-            'persistent_id' => 'cache_connection_repository',
+            'persistent_id' => 'repository_conn',
             'read_timeout' => 60,
         ],
 
-        'cache-response' => [
+        'response' => [
             'host' => env('REDIS_CACHE_HOST', 'redis-cache'),
             'password' => env('REDIS_PASSWORD', null),
             'port' => env('REDIS_PORT', 6379),
             'database' => 3,
             'persistent' => true,
-            'persistent_id' => 'cache_connection_response',
+            'persistent_id' => 'response_conn',
             'read_timeout' => 60,
         ],
 
@@ -191,7 +189,7 @@ return [
             'port' => env('REDIS_PORT', 6379),
             'database' => 0,
             'persistent' => true,
-            'persistent_id' => 'queue_connection',
+            'persistent_id' => 'queue_conn',
             'read_timeout' => 60,
         ],
     ],

@@ -130,16 +130,22 @@ services:
                 - PROJECT_PATH=${DOCKER_CODE_FOLDER}
         container_name: "${DOCKER_APP_SLUG}-queue"
         environment:
-            APP_ENV: production
-            SESSION_DRIVER: redis
-            CACHE_STORE: redis
-            SANCTUM_CACHE_STORE: redis-sanctum
-            REPOSITORY_CACHE_STORE: redis-repository
+            APP_ENV: ${APP_ENV}
+            SESSION_DRIVER: ${SESSION_DRIVER}
+            CACHE_STORE: ${CACHE_STORE}
+            BULWARK_CACHE_STORE: ${BULWARK_CACHE_STORE}
+            REPOSITORY_CACHE_STORE: ${REPOSITORY_CACHE_STORE}
+            DB_CONNECTION: ${DB_CONNECTION}
+            DB_HOST: ${DB_HOST}
+            DB_PORT: ${DB_PORT}
+            DB_DATABASE: ${DB_DATABASE}
+            DB_USERNAME: ${DB_USERNAME}
+            DB_PASSWORD: ${DB_PASSWORD}
         volumes:
             - ./:${DOCKER_CODE_FOLDER}:delegated
             - ./.docker/php-swoole/php.ini:/usr/local/etc/php/php.ini
         working_dir: ${DOCKER_CODE_FOLDER}
-        #command: php artisan queue:work --sleep=3 --tries=3 >> /proc/1/fd/1 2>&1
+        #command: php artisan queue:work redis --queue=bulwark --sleep=3 --tries=3 >> /proc/1/fd/1 2>&1
         command: php artisan queue:work redis --queue=bulwark --sleep=3 --tries=3
         healthcheck:
             test: [ "CMD", "pgrep", "php" ]
@@ -148,6 +154,8 @@ services:
             retries: 3
         depends_on:
             redis-cache:
+                condition: service_healthy
+            mysql:
                 condition: service_healthy
         networks:
             - backend-octane

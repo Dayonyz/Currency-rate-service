@@ -79,19 +79,19 @@ return [
             'connection' => 'cache',
         ],
 
-        'redis-sanctum' => [
+        'redis-bulwark' => [
             'driver' => 'redis',
-            'connection' => 'cache-sanctum',
+            'connection' => 'bulwark',
         ],
 
         'redis-repository' => [
             'driver' => 'redis',
-            'connection' => 'cache-repository',
+            'connection' => 'repository',
         ],
 
         'redis-response' => [
             'driver' => 'redis',
-            'connection' => 'cache-response',
+            'connection' => 'response',
         ],
 
         'dynamodb' => [

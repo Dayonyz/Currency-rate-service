@@ -13,7 +13,7 @@ class HashPerformanceTest extends Command
      *
      * @var string
      */
-    protected $signature = 'app:hash-performance-test';
+    protected $signature = 'performance:hash';
 
     /**
      * The console command description.
@@ -56,9 +56,48 @@ class HashPerformanceTest extends Command
         }
         $end = hrtime(true);
 
-        echo "Sodium: " . round(($end-$start)/(1000*1000), 2) . "\n";
+        echo "Sodium 16: " . round(($end-$start)/(1000*1000), 2) . "\n";
         echo "Last hash: " . $hash . "\n";
         echo "Hash length: " . strlen($hash) . "\n";
+        echo "---------------------------" . "\n";
+
+        $start = hrtime(true);
+        foreach ($tokens as $token) {
+            hash_equals($hash, sodium_bin2hex(sodium_crypto_generichash(
+                $token,
+                '',
+                16
+            )));
+        }
+        $end = hrtime(true);
+
+        echo "Sodium 16 compare: " . round(($end-$start)/(1000*1000), 2) . "\n";
+        echo "---------------------------" . "\n";
+
+        $start = hrtime(true);
+        foreach ($tokens as $token) {
+            $hash = sodium_bin2hex(sodium_crypto_generichash(
+                $token,
+                ''
+            ));
+        }
+        $end = hrtime(true);
+
+        echo "Sodium 32: " . round(($end-$start)/(1000*1000), 2) . "\n";
+        echo "Last hash: " . $hash . "\n";
+        echo "Hash length: " . strlen($hash) . "\n";
+        echo "---------------------------" . "\n";
+
+        $start = hrtime(true);
+        foreach ($tokens as $token) {
+            hash_equals($hash, sodium_bin2hex(sodium_crypto_generichash(
+                $token,
+                ''
+            )));
+        }
+        $end = hrtime(true);
+
+        echo "Sodium 32 compare: " . round(($end-$start)/(1000*1000), 2) . "\n";
         echo "---------------------------" . "\n";
 
         $start = hrtime(true);
