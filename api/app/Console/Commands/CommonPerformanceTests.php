@@ -86,7 +86,6 @@ class CommonPerformanceTests extends Command
         echo "Serialize array: " . round(($end-$start)/(1000*1000), 2) . "\n";
         echo "---------------------------" . "\n";
 
-
         $start = hrtime(true);
         for ($i = 0; $i < 100000; $i++) {
             $dateTime = $token->created_at->getTimestamp();
