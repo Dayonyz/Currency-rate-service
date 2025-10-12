@@ -18,7 +18,7 @@
         "laravel/octane": "^2.12",
         "laravel/sanctum": "^4.0",
         "spatie/laravel-responsecache": "^7.7",
-        "dayonyz/sanctum-bulwark": "^1.5.2",
+        "dayonyz/sanctum-bulwark": "^1.5.3",
         "ext-sodium": "*",
         "ext-redis": "*"
     },
