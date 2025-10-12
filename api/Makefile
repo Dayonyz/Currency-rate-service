@@ -6,7 +6,7 @@ sshOctaneContainer=php-worker
 mysqlContainer=mysql
 
 build: ## Builds Docker file
-	docker-compose build --no-cache $(sshContainer)
+	docker compose build --no-cache $(sshContainer)
 
 build-octane: ## Builds Docker file
 	mutagen-compose -f docker-compose.octane.yml build --no-cache --pull
@@ -189,7 +189,7 @@ install: ## Install Laravel for dev work
 	rm -rf .docker/mysql/volumes/*
 	rm -rf .docker/redis/data/*
 	@make start
-	docker-compose exec $(sshContainer) bash -c "\
+	docker compose exec $(sshContainer) bash -c "\
         composer install --optimize-autoloader --no-dev && \
         yes | php artisan key:generate && \
         yes | php artisan optimize:clear && \
@@ -232,8 +232,8 @@ install-octane: ## Install Laravel with octane for dev work
 kill: ## Stops all docker containers
 	docker stop $(shell docker ps -aq)
 
-start: ## Starts docker-compose
-	docker-compose up -d $(serviceList)
+start: ## Starts docker compose
+	docker compose up -d $(serviceList)
 
 start-octane:
 	mutagen-compose -f docker-compose.octane.yml up -d $(octaneServiceList)
@@ -241,26 +241,26 @@ start-octane:
 stop-octane:
 	mutagen-compose -f docker-compose.octane.yml down --volumes
 
-stop: ## Stops docker-compose
-	docker-compose down
+stop: ## Stops docker compose
+	docker compose down
 
-restart: ## Stops docker-compose and starts docker-compose
+restart: ## Stops docker compose and starts docker compose
 	make stop && make start
 
-restart-octane: ## Stops docker-compose and starts docker-compose
+restart-octane: ## Stops docker compose and starts docker compose
 	make stop-octane && make start-octane
 
-ssh: ## SSH to docker-compose
-	docker-compose exec $(sshContainer) bash
+ssh: ## SSH to docker compose
+	docker compose exec $(sshContainer) bash
 
-ssh-octane: ## SSH to docker-compose
+ssh-octane: ## SSH to docker compose
 	mutagen-compose -f docker-compose.octane.yml exec $(sshOctaneContainer) bash
 
 db-create: ## Create MySQL database
 	DB_PASSWORD=$$(grep '^DB_PASSWORD=' .env | cut -d '=' -f2); \
 	DB_USERNAME=$$(grep '^DB_USERNAME=' .env | cut -d '=' -f2); \
 	DB_DATABASE=$$(grep '^DB_DATABASE=' .env | cut -d '=' -f2); \
-	docker-compose exec $(mysqlContainer) bash -c "mysql -h db -u$$DB_USERNAME -p'$$DB_PASSWORD' -e 'CREATE DATABASE IF NOT EXISTS $$DB_DATABASE;'"
+	docker compose exec $(mysqlContainer) bash -c "mysql -h db -u$$DB_USERNAME -p'$$DB_PASSWORD' -e 'CREATE DATABASE IF NOT EXISTS $$DB_DATABASE;'"
 
 prune: ## Clear build cache
 	sudo docker system prune -af
