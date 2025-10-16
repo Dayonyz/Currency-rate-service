@@ -27,6 +27,7 @@ class EloquentCurrencyRatesRepository implements CurrencyRatesRepository
         $this->limit = min($this->limits);
         $this->ttl = config('repository.eloquent.cache.ttl');
     }
+
     /**
      * @throws Exception
      */

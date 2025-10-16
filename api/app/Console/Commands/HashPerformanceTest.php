@@ -78,6 +78,34 @@ class HashPerformanceTest extends Command
         foreach ($tokens as $token) {
             $hash = sodium_bin2hex(sodium_crypto_generichash(
                 $token,
+                '',
+                24
+            ));
+        }
+        $end = hrtime(true);
+
+        echo "Sodium 24: " . round(($end-$start)/(1000*1000), 2) . "\n";
+        echo "Last hash: " . $hash . "\n";
+        echo "Hash length: " . strlen($hash) . "\n";
+        echo "---------------------------" . "\n";
+
+        $start = hrtime(true);
+        foreach ($tokens as $token) {
+            hash_equals($hash, sodium_bin2hex(sodium_crypto_generichash(
+                $token,
+                '',
+                24
+            )));
+        }
+        $end = hrtime(true);
+
+        echo "Sodium 24 compare: " . round(($end-$start)/(1000*1000), 2) . "\n";
+        echo "---------------------------" . "\n";
+
+        $start = hrtime(true);
+        foreach ($tokens as $token) {
+            $hash = sodium_bin2hex(sodium_crypto_generichash(
+                $token,
                 ''
             ));
         }
@@ -202,7 +230,7 @@ class HashPerformanceTest extends Command
 
         $start = hrtime(true);
         foreach ($tokens as $token) {
-            $hash = md5(hash('xxh32', substr($token, -24)) . strrev($token) . hash('xxh32', $token));
+            $hash = md5(hash('xxh32', substr($token, -24)) . $token . hash('xxh32', $token));
         }
         $end = hrtime(true);
 
