@@ -9,8 +9,8 @@ use App\Models\Rate;
 use App\Repositories\Contracts\CurrencyRatesRepository;
 use ErrorException;
 use Exception;
+use InvalidArgumentException;
 use JetBrains\PhpStorm\ArrayShape;
-use Psr\SimpleCache\InvalidArgumentException;
 use Illuminate\Contracts\Cache\Repository as CacheInterface;
 
 class EloquentCurrencyRatesRepository implements CurrencyRatesRepository
@@ -55,35 +55,36 @@ class EloquentCurrencyRatesRepository implements CurrencyRatesRepository
     #[ArrayShape(['currency' => "array", 'base_currency' => "array", 'rate' => "mixed", 'actual_at' => "mixed"])]
     public function getLatestRate(CurrenciesEnum $currency, CurrenciesEnum $baseCurrency): ?array
     {
-        $response = fn() => CurrencyRateResource::make(
-            Rate::byPairIso($currency ,$baseCurrency)
+        $cacheKey = 'currency_rates:' . $currency->name . '_' . $baseCurrency->name . ':rate_latest';
+
+        $getResponse = static fn() => CurrencyRateResource::make(
+            Rate::byPairIso($currency, $baseCurrency)
                 ->latest('id')
                 ->first()
         )->toArray(request());
 
-        if ($this->cache) {
-            $rate = $this->cache->remember(
-                'currency_rates:' . $currency->name . '_' . $baseCurrency->name . ':rate_latest',
-                $this->ttl,
-                $response
-            );
-
-            if (empty($rate)) {
-                $this->cache->forget(
-                    'currency_rates:' . $currency->name . '_' . $baseCurrency->name . ':rate_latest'
-                );
-
-                return [];
-            } else {
-                return $rate;
-            }
+        if (! $this->cache) {
+            return $getResponse();
         }
 
-        return $response();
+        return $this->cache->remember($cacheKey, $this->ttl, function () use ($getResponse, $cacheKey) {
+            $rate = $getResponse();
+
+            if (empty($rate)) {
+                $this->cache->forget($cacheKey);
+                return [];
+            }
+
+            return $rate;
+        });
     }
 
     /**
-     * @throws InvalidArgumentException
+     * @param CurrenciesEnum $currency
+     * @param CurrenciesEnum $baseCurrency
+     * @param int|null $limit
+     * @param int|null $page
+     * @return array
      */
     public function getAllRates(
         CurrenciesEnum $currency,
@@ -92,7 +93,8 @@ class EloquentCurrencyRatesRepository implements CurrencyRatesRepository
         ?int $page = null
     ): array {
         $this->normalizeLimit($limit);
-        $page = $page ?: 1;
+
+        $page = $page ?? 1;
         $sort = 'desc';
 
         $query = Rate::byPairIso($currency, $baseCurrency)
@@ -105,55 +107,52 @@ class EloquentCurrencyRatesRepository implements CurrencyRatesRepository
 
         $query->limit($this->limit);
 
-        $response = fn() => CurrencyRateResource::collection($query->get())->toArray(request());
+        $cacheKey = 'currency_rates:' .
+            $currency->name . '_' . $baseCurrency->name .
+            ':rates_paginate:' . $this->limit . '_' . $page;
 
-        if ($this->cache) {
-            $rates = $this->cache->remember(
-                'currency_rates:' . $currency->name . '_' . $baseCurrency->name .
-                ':rates_paginate:' . $this->limit . '_' . $page,
-                $this->ttl,
-                $response
-            );
+        $getResponse = static fn() => CurrencyRateResource::collection($query->get())->toArray(request());
+
+        if (! $this->cache) {
+            return $getResponse();
+        }
+
+        return $this->cache->remember($cacheKey, $this->ttl, function () use ($getResponse, $cacheKey) {
+            $rates = $getResponse();
 
             if (empty($rates)) {
-                $this->cache->forget(
-                    'currency_rates:' . $currency->name . '_' . $baseCurrency->name .
-                    ':rates_paginate:' . $this->limit . '_' . $page
-                );
-
+                $this->cache->forget($cacheKey);
                 return [];
             }
 
             return $rates;
-        }
-
-        return $response();
+        });
     }
 
     /**
-     * @throws InvalidArgumentException
+     * @param CurrenciesEnum $currency
+     * @param CurrenciesEnum $baseCurrency
+     * @return int
      */
     public function getRatesTotalCount(CurrenciesEnum $currency, CurrenciesEnum $baseCurrency): int
     {
-        $response = fn() => Rate::byPairIso($currency, $baseCurrency)->count();
+        $cacheKey = 'currency_rates:' . $currency->name . '_' . $baseCurrency->name . ':rates_count';
 
-        if ($this->cache) {
-            $itemsCount = $this->cache->remember(
-                'currency_rates:' . $currency->name . '_' . $baseCurrency->name . ':rates_count',
-                $this->ttl,
-                $response
-            );
+        $getResponse = static fn() => Rate::byPairIso($currency, $baseCurrency)->count();
 
-            if ($itemsCount === 0) {
-                $this->cache->forget(
-                    'currency_rates:' . $currency->name . '_' . $baseCurrency->name . ':rates_count'
-                );
-            }
-
-            return $itemsCount;
+        if (! $this->cache) {
+            return $getResponse();
         }
 
-        return $response();
+        return $this->cache->remember($cacheKey, $this->ttl, function () use ($getResponse, $cacheKey) {
+            $count = $getResponse();
+
+            if ($count === 0) {
+                $this->cache->forget($cacheKey);
+            }
+
+            return $count;
+        });
     }
 
     private function normalizeLimit(?int $limit): void
